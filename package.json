@@ -1,0 +1,17 @@
+{
+  "name": "dsr-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DSR Generator monorepo — git hooks orchestration (husky + lint-staged)",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "zod": "^4.6.5"
+  }
+}

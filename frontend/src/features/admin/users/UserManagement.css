@@ -1,0 +1,22 @@
+.user-action-button {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    color: #ef4444;
+}
+
+.deactivate {
+    color: #ef4444;
+}
+.deactivate:hover {
+    background-color: rgba(239, 68, 68, 0.07);
+}
+
+.activate {
+    color: #318f31cb;
+}
+
+.activate:hover {
+    background-color: rgba(49, 143, 49, 0.07);
+}

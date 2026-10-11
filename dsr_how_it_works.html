@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSR Generator – How It Works</title>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #dbeafe;
+            --green: #15803d;
+            --green-bg: #dcfce7;
+            --amber: #b45309;
+            --amber-bg: #fef3c7;
+            --red: #b91c1c;
+            --red-bg: #fee2e2;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Custom text selection highlight */
+        ::selection {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        header ::selection {
+            background: rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #2563eb 100%);
+            color: #fff;
+            padding: 48px 40px 40px;
+        }
+
+        header .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 3px 14px;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            margin-top: 10px;
+            opacity: 1;
+            color: #ffffff;
+            font-size: 1.05rem;
+            max-width: 600px;
+        }
+
+        header .meta {
+            margin-top: 18px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* ── Layout ──────────────────────────────────────── */
+        .wrapper {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            gap: 32px;
+            align-items: flex-start;
+        }
+
+        /* ── Sidebar Nav ─────────────────────────────────── */
+        nav {
+            width: 220px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 24px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Slim scrollbar for the sticky nav */
+        nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        nav::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        nav::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        nav .nav-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        nav a {
+            display: block;
+            padding: 7px 12px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+            margin-bottom: 2px;
+            transition: all 0.15s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* ── Main Content ────────────────────────────────── */
+        main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        section {
+            margin-bottom: 48px;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--text);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 24px 0 10px;
+            color: var(--primary);
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: #334155;
+        }
+
+        /* ── Cards ───────────────────────────────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ── Step Flow ───────────────────────────────────── */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-body strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .step-body p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ── Health Badges ───────────────────────────────── */
+        .badge-green {
+            display: inline-block;
+            background: var(--green-bg);
+            color: var(--green);
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .badge-amber {
+            display: inline-block;
+            background: var(--amber-bg);
+            color: var(--amber);
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .badge-red {
+            display: inline-block;
+            background: var(--red-bg);
+            color: var(--red);
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .badge-blue {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* ── Tables ──────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 20px;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 9px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* ── Two-Axis Diagram ────────────────────────────── */
+        .axis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 24px;
+        }
+
+        .axis-card {
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .axis-card.blue {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .axis-card.purple {
+            background: #faf5ff;
+            border-color: #e9d5ff;
+        }
+
+        .axis-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 10px;
+        }
+
+        .axis-card.blue h4 {
+            color: #1d4ed8;
+        }
+
+        .axis-card.purple h4 {
+            color: #7c3aed;
+        }
+
+        .axis-card p {
+            font-size: 13px;
+            color: #334155;
+            margin: 0;
+        }
+
+        /* ── Combination table highlight ─────────────────── */
+        .combo-highlight {
+            background: #fef9c3 !important;
+            font-weight: 600;
+        }
+
+        /* ── Info / Tip boxes ────────────────────────────── */
+        .callout {
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 14px 0;
+            font-size: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .callout.info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .callout.warning {
+            background: var(--amber-bg);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .callout.tip {
+            background: var(--green-bg);
+            border-left: 4px solid #22c55e;
+        }
+
+        /* ── Report type pills ───────────────────────────── */
+        .pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .pill {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            padding: 5px 16px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ── Flow diagram ────────────────────────────────── */
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+
+        .flow-box {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .flow-arrow {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ── Account logic ───────────────────────────────── */
+        .threshold-row {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .threshold-item {
+            flex: 1;
+            border-radius: 8px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+        }
+
+        .threshold-item .th-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .threshold-item .th-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .threshold-item.green-bg {
+            background: var(--green-bg);
+        }
+
+        .threshold-item.green-bg .th-value {
+            color: var(--green);
+        }
+
+        .threshold-item.amber-bg {
+            background: var(--amber-bg);
+        }
+
+        .threshold-item.amber-bg .th-value {
+            color: var(--amber);
+        }
+
+        .threshold-item.red-bg {
+            background: var(--red-bg);
+        }
+
+        .threshold-item.red-bg .th-value {
+            color: var(--red);
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+                max-height: none;
+                overflow-y: visible;
+            }
+
+            .axis-grid,
+            .threshold-row {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="badge">Internal Guide · v3.0</div>
+        <h1>DSR Generator — How It Works</h1>
+        <p>A complete reference to the application: report generation, health scoring, program &amp; team-performance
+            analytics, risk and action-item tracking, delivery presentations, and Excel/CSV-driven projects.</p>
+        <div class="meta">Last updated: July 2026 &nbsp;·&nbsp; DSR Generator v3</div>
+    </header>
+
+    <div class="wrapper">
+
+        <!-- Sidebar Nav -->
+        <nav>
+            <div class="nav-title">On this page</div>
+            <a href="#overview">Overview</a>
+            <a href="#how-reports-work">How Reports Work</a>
+            <a href="#ticket-filtering">Ticket Filtering</a>
+            <a href="#health-scoring">Health Scoring</a>
+            <a href="#axis1">↳ Axis 1: Blocked %</a>
+            <a href="#sprint-burndown">↳ Sprint Burndown</a>
+            <a href="#axis2">↳ Axis 2: Prod Bugs</a>
+            <a href="#combination">↳ Final Combination</a>
+            <a href="#wsr-health">↳ WSR Weekly Health</a>
+            <a href="#account-health">Account Health</a>
+            <a href="#report-types">Report Types</a>
+            <a href="#program-reports">Program Reports</a>
+            <a href="#team-performance">Team Performance</a>
+            <a href="#tp-board-view">↳ Board View</a>
+            <a href="#tp-trends">↳ Trends</a>
+            <a href="#risk-management">Risk Management</a>
+            <a href="#action-items">Action Items</a>
+            <a href="#delivery-presentations">Delivery Presentations</a>
+            <a href="#excel-projects">Excel / CSV Projects</a>
+            <a href="#manager-insights">Manager Insights</a>
+            <a href="#exec-summaries">Executive Summaries</a>
+            <a href="#health-rationale">↳ Health Rationale UI</a>
+            <a href="#ticket-details">↳ Ticket-Level Details</a>
+            <a href="#faq">FAQs</a>
+        </nav>
+
+        <main>
+
+            <!-- Overview -->
+            <section id="overview">
+                <h2>Overview</h2>
+                <p>The DSR Generator is an automated tool that pulls data from Jira every evening, analyses team
+                    activity using AI, and produces structured status reports for projects, accounts, and leadership. It
+                    eliminates manual report writing while providing consistent, auditable health signals.</p>
+
+                <div class="flow">
+                    <div class="flow-box">🗂️ Jira Boards</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">⚙️ Activity Filter</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">📊 Health Engine</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">🤖 AI Summary</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">📄 Report (DB / Excel / PPT)</div>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>Reports are generated automatically each evening (IST) via a scheduler. They can also be
+                        triggered manually from the dashboard at any time.</div>
+                </div>
+            </section>
+
+            <!-- How Reports Work -->
+            <section id="how-reports-work">
+                <h2>How Reports Are Generated</h2>
+                <p>Each report generation follows a strict sequence of steps:</p>
+
+                <div class="card">
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-body">
+                                <strong>Fetch issues from Jira</strong>
+                                <p>All tickets from the project's active sprint (or updated in the last 2 days on Kanban
+                                    boards) are fetched, including their full history, comments, and attachments.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-body">
+                                <strong>Filter to team members only</strong>
+                                <p>Tickets are narrowed down to those assigned to registered team members — by email,
+                                    Jira account ID, or name. Dev, QA, and UAT assignees are all checked.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-body">
+                                <strong>Identify the report window</strong>
+                                <p>The tool determines the "report window" — the time since the last report was
+                                    generated. Typically this is the previous day's report timestamp to today's report
+                                    timestamp (approximately 24 hours, anchored to 6:30 PM IST).</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-body">
+                                <strong>Classify tickets: Active vs. Context</strong>
+                                <p><strong>Active tickets</strong> had real activity in the window (status change,
+                                    comment, attachment, or a GitHub/PR commit). These form the work summary.
+                                    <strong>Context tickets</strong> are still in-flight but had no activity — they are
+                                    passed to the AI as background only.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">5</div>
+                            <div class="step-body">
+                                <strong>Calculate project health (deterministic)</strong>
+                                <p>A rules-based engine calculates health <em>before</em> the AI sees any data. This
+                                    ensures health scores are consistent and explainable — not influenced by tone or
+                                    word choice.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">6</div>
+                            <div class="step-body">
+                                <strong>AI generates the narrative</strong>
+                                <p>Claude AI writes the executive summary, work summary, key risks, and plan for
+                                    tomorrow — using only the active tickets as source of truth. The AI must honour the
+                                    pre-calculated health score.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">7</div>
+                            <div class="step-body">
+                                <strong>Save and publish</strong>
+                                <p>The report is saved to the database and made available in the dashboard. It can also
+                                    be exported to Excel or PowerPoint.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ticket Filtering -->
+            <section id="ticket-filtering">
+                <h2>Ticket Filtering Logic</h2>
+                <p>Not every Jira ticket on the board makes it into the report. Here is the full filtering hierarchy:
+                </p>
+
+                <h3>Which tickets are included?</h3>
+                <table>
+                    <tr>
+                        <th>Check</th>
+                        <th>How it works</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Team member match</strong></td>
+                        <td>Main assignee, QA assignee, or UAT assignee must be a registered team member for the
+                            project. The tool does email-based and name-based matching to handle contractor IDs and
+                            email variants.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Activity within window</strong></td>
+                        <td>At least one of: status change, comment, attachment, or GitHub/PR activity within the report
+                            window. Tickets with only a generic "link update" (e.g. a Jira auto-link) are excluded.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sprint membership</strong></td>
+                        <td>For Scrum projects, tickets must be in the active sprint. For Kanban projects, tickets
+                            updated within the last 2 days are considered.</td>
+                    </tr>
+                </table>
+
+                <h3>Active vs. Context tickets</h3>
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Definition</th>
+                        <th>Used in</th>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blue">Active</span></td>
+                        <td>Had specific activity (status change, comment, PR commit) in the report window</td>
+                        <td>Work summary, executive summary, plan for tomorrow</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blue">Context</span></td>
+                        <td>In-flight but no activity in the window — still in the sprint</td>
+                        <td>Passed to AI as background only, not cited as "work done"</td>
+                    </tr>
+                </table>
+
+                <h3>Stale tickets</h3>
+                <p>A ticket is flagged as <strong>stale</strong> if it has been in <em>In Progress</em> status for more
+                    than 3 days with no Jira updates AND no GitHub/PR commit activity. Stale tickets appear in the risks
+                    section but do <strong>not</strong> affect the health colour — they are a narrative signal only.</p>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div>A ticket won't appear in the report if it had activity today but the assignee is not a
+                        registered team member. If you notice missing tickets, first check team member registrations in
+                        the admin panel.</div>
+                </div>
+            </section>
+
+            <!-- Health Scoring -->
+            <section id="health-scoring">
+                <h2>Project Health Scoring</h2>
+                <p>Health is determined by a <strong>two-axis deterministic engine</strong>, not by the AI. The AI
+                    narrates what happened; the engine decides the colour. This keeps health consistent, auditable, and
+                    free from AI sentiment bias.</p>
+
+                <div class="axis-grid">
+                    <div class="axis-card blue">
+                        <h4>🔵 Axis 1 — Blocked Ticket %</h4>
+                        <p>What share of your WIP tickets are stuck? Measures the ratio of Blocked tickets vs. all
+                            tickets In Progress, In Review, QA, and UAT.</p>
+                    </div>
+                    <div class="axis-card purple">
+                        <h4>🟣 Axis 2 — Production Bug Score</h4>
+                        <p>How many active Bugs are in the sprint, and how critical are they? Accounts for bug count,
+                            priority level, and how recently the bug was created.</p>
+                    </div>
+                </div>
+
+                <p>Each axis independently produces a <span class="badge-green">Green</span>, <span
+                        class="badge-amber">Amber</span>, or <span class="badge-red">Red</span> signal. The two signals
+                    are then combined into the final project health.</p>
+            </section>
+
+            <!-- Axis 1 -->
+            <section id="axis1">
+                <h2>Axis 1 — Blocked Ticket Percentage</h2>
+                <p>
+                    <strong>WIP pool</strong> = tickets in: In Progress + In Review (Dev Complete / PR Review) + QA /
+                    Testing.<br>
+                    <strong>UAT tickets are excluded entirely</strong> — once a ticket reaches UAT, V2's development work
+                    is complete (only customer/PO sign-off remains). UAT can never contribute to blocked percentage.<br>
+                    <strong>Blocked %</strong> = number of Blocked tickets ÷ WIP pool size × 100.
+                </p>
+
+                <table>
+                    <tr>
+                        <th>Condition</th>
+                        <th>Result</th>
+                    </tr>
+                    <tr>
+                        <td>Blocked % is <strong>≥ Amber Threshold</strong> (default <strong>20%</strong>)</td>
+                        <td><span class="badge-amber">Amber</span></td>
+                    </tr>
+                    <tr>
+                        <td>Blocked % is below the threshold</td>
+                        <td><span class="badge-green">Green</span></td>
+                    </tr>
+                </table>
+
+                <div class="callout tip">
+                    <div class="callout-icon">✅</div>
+                    <div><strong>A single blocked ticket will not turn a project Amber</strong> — unless the WIP pool
+                        has only 4 or fewer tickets total. For a typical 12-ticket project, you'd need 3 or more blocked
+                        tickets (25%) before the Amber threshold is reached.</div>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>The Amber Threshold (default 20%) is configurable per account in the database. Account managers
+                        can request a different threshold without any code changes.</div>
+                </div>
+
+                <div class="callout tip">
+                    <div class="callout-icon">✅</div>
+                    <div><strong>Why exclude UAT?</strong> V2 typically has one BA; UAT is run by the customer or Product Owner. Blocking a UAT ticket would unfairly penalise the team for a dependency that is entirely on the customer side.</div>
+                </div>
+
+                <h3>Why this approach?</h3>
+                <p>A blocked ticket often reflects an <em>external</em> dependency — a third party, a decision, or an
+                    environment issue — not a failure by the team. The threshold exists so one dependency blocker
+                    doesn't unfairly colour the whole project, but a pattern of multiple blocks does get flagged.</p>
+            </section>
+
+            <!-- Sprint Burndown -->
+            <section id="sprint-burndown">
+                <h2>Sprint Burndown — QA Partial Credit</h2>
+                <p>The sprint burndown uses <strong>weighted completion</strong> to avoid penalising teams whose work is
+                    late-stage but nearly done. A ticket in QA has already passed development and code review — it
+                    counts for 0.6 rather than 0.</p>
+
+                <table>
+                    <tr>
+                        <th>Ticket Status</th>
+                        <th>Completion Weight</th>
+                        <th>Rationale</th>
+                    </tr>
+                    <tr>
+                        <td>Done</td>
+                        <td><strong>1.0</strong></td>
+                        <td>Fully complete</td>
+                    </tr>
+                    <tr>
+                        <td>UAT / PO Review</td>
+                        <td><strong>1.0</strong></td>
+                        <td>V2 work is done — awaiting customer sign-off only</td>
+                    </tr>
+                    <tr>
+                        <td>QA / Testing</td>
+                        <td><strong>0.6</strong></td>
+                        <td>Development done, in final validation</td>
+                    </tr>
+                    <tr>
+                        <td>In Review, In Progress, Blocked, etc.</td>
+                        <td><strong>0.0</strong></td>
+                        <td>Still in active development</td>
+                    </tr>
+                </table>
+
+                <p><code>completionPct = Σ(weights) / totalV2Tickets × 100</code></p>
+                <p><code>offTrackPct = sprintElapsedPct − completionPct</code></p>
+                <p>The health rationale for each daily report includes the QA count so the partial credit is transparent (e.g. "Sprint: 4 done + 2 in QA (0.6 credit) of 8 → 65% weighted completion").</p>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Example:</strong> Sprint day 5 of 10 (50% elapsed). 8 tickets total: 3 Done + 3 in QA + 2 In Progress. Weighted completion = (3×1.0 + 3×0.6) / 8 = 60%. offTrackPct = 50 − 60 = −10% (actually ahead). Without partial credit it would show 3/8 = 37.5% → 12.5% behind pace.</div>
+                </div>
+            </section>
+
+            <!-- Axis 2 -->
+            <section id="axis2">
+                <h2>Axis 2 — Production Bug Score</h2>
+                <p>Only Jira tickets with <strong>issue type = Bug</strong> or <strong>Sub-bug</strong> where the
+                    environment is <strong>Production</strong> are counted. Only <strong>fresh bugs</strong> — created
+                    within the 15-day window relative to sprint start — are scored. Bugs outside that window are
+                    treated as intentionally planned and completely excluded.</p>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>The 15-day sprint-relative age rule:</strong>
+                        <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+                            <li><strong>Scrum</strong>: A bug created more than 15 days before the sprint start date is treated as a planned ticket. It is assumed the product team intentionally scheduled it into the sprint. Only bugs created within 15 days of sprint start (or after it started) are tracked.</li>
+                            <li><strong>Kanban</strong>: Same rule, but the reference point is the current week's Monday instead of a sprint start date.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Special cases (excluded from or adjusting the score)</h3>
+                <table>
+                    <tr>
+                        <th>Case</th>
+                        <th>Detection</th>
+                        <th>Effect</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Old / planned bug</strong></td>
+                        <td>Created &gt; 15 days before sprint start</td>
+                        <td>Completely excluded — no score impact</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Re-opened sub-bug</strong></td>
+                        <td>Sub-bug whose parent story is still active on the board</td>
+                        <td>Not scored. AI mentions it as "re-opened" or "regression on [parent story]" in workSummary only.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Spillover bug</strong></td>
+                        <td>Bug carried over from a previous sprint (Sprint changelog shows a prior sprint)</td>
+                        <td>Forces Axis 2 to at least <span class="badge-amber">Amber</span>. Flagged as a Risk in the AI output.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bug in UAT</strong></td>
+                        <td>Status = UAT</td>
+                        <td>On plan — excluded from scoring.</td>
+                    </tr>
+                </table>
+
+                <h3>Scoring rules for fresh active bugs</h3>
+                <table>
+                    <tr>
+                        <th>Fresh Active Bug Count</th>
+                        <th>Priority</th>
+                        <th>Score</th>
+                    </tr>
+                    <tr>
+                        <td>0</td>
+                        <td>—</td>
+                        <td><span class="badge-green">Green</span></td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Low</td>
+                        <td><span class="badge-green">Green</span></td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Medium</td>
+                        <td><span class="badge-amber">Amber</span></td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>High / Critical</td>
+                        <td><span class="badge-red">Red</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>All Low / Medium</td>
+                        <td><span class="badge-amber">Amber</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Any High / Critical</td>
+                        <td><span class="badge-red">Red</span></td>
+                    </tr>
+                    <tr>
+                        <td>&gt; 2</td>
+                        <td>Any</td>
+                        <td><span class="badge-red">Red</span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Any spillover bug (regardless of count)</td>
+                        <td>At least <span class="badge-amber">Amber</span> + Risk entry</td>
+                    </tr>
+                </table>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div>Volume-percentage rows (e.g., "bugs = 5–10% of active tickets") have been removed. Sprint backlog composition is the responsibility of the PO/Scrum Master — a high number of bugs on the board does not automatically mean V2 is at fault.</div>
+                </div>
+            </section>
+
+            <!-- Combination -->
+            <section id="combination">
+                <h2>Final Health — The Balanced Combination</h2>
+                <p>The two axis scores are combined using a rule designed so that <strong>neither signal dominates
+                        alone</strong>. Only when both axes are pointing amber — meaning there are both blocked tickets
+                    AND production bugs — does the project escalate to Red.</p>
+
+                <table>
+                    <tr>
+                        <th>Axis 1 (Blocked %)</th>
+                        <th>Axis 2 (Prod Bugs)</th>
+                        <th>Final Health</th>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-green">Green</span></td>
+                        <td><span class="badge-green">Green</span></td>
+                        <td><span class="badge-green">🟢 Green</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-amber">Amber</span></td>
+                        <td><span class="badge-green">Green</span></td>
+                        <td><span class="badge-amber">🟡 Amber</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-green">Green</span></td>
+                        <td><span class="badge-amber">Amber</span></td>
+                        <td><span class="badge-amber">🟡 Amber</span></td>
+                    </tr>
+                    <tr class="combo-highlight">
+                        <td><span class="badge-amber">Amber</span></td>
+                        <td><span class="badge-amber">Amber</span></td>
+                        <td><span class="badge-red">🔴 Red</span> — both signals firing together</td>
+                    </tr>
+                    <tr>
+                        <td>Any</td>
+                        <td><span class="badge-red">Red</span></td>
+                        <td><span class="badge-red">🔴 Red</span></td>
+                    </tr>
+                </table>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div>A team with several blocked tickets but no bugs stays Amber, not Red. Equally, a team with one
+                        medium-priority bug and no blockers stays Amber. Red requires a combination of signals or an
+                        independently critical bug.</div>
+                </div>
+
+                <h3>What about the AI?</h3>
+                <p>The AI receives the pre-calculated health score and must use it as-is. The only exception: if the AI
+                    finds clear evidence of a <strong>P0 production outage or critical live incident</strong> in the
+                    ticket descriptions that was not captured by the rules engine, it may escalate from Amber to Red. It
+                    may never downgrade Red or Amber to a better colour.</p>
+            </section>
+
+            <!-- WSR Weekly Health -->
+            <section id="wsr-health">
+                <h2>Weekly Report Health — Majority Rule</h2>
+                <p>The weekly project report health is derived from the daily health snapshots for the week using a
+                    <strong>majority rule</strong>. A single bad day no longer condemns the entire week.</p>
+
+                <table>
+                    <tr>
+                        <th>Daily Breakdown</th>
+                        <th>Weekly Health</th>
+                        <th>Rationale</th>
+                    </tr>
+                    <tr>
+                        <td>Strict majority (&gt; 50%) of days are Red</td>
+                        <td><span class="badge-red">🔴 Red</span></td>
+                        <td>More than half the working week was Red</td>
+                    </tr>
+                    <tr>
+                        <td>Any Red or Amber day, but not strict majority Red</td>
+                        <td><span class="badge-amber">🟡 Amber</span></td>
+                        <td>Includes ties — e.g. 2 of 4 days Red → Amber</td>
+                    </tr>
+                    <tr>
+                        <td>All days Green</td>
+                        <td><span class="badge-green">🟢 Green</span></td>
+                        <td>Entirely clean week</td>
+                    </tr>
+                </table>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div><strong>Example:</strong> Mon=Red, Tue=Green, Wed=Green, Thu=Green, Fri=Green → 1 of 5 days Red (20%, not a strict majority) → <span class="badge-amber">Amber</span>. Previously this would have been <span class="badge-red">Red</span> under the old worst-day rule.</div>
+                </div>
+
+                <p>A <code>weeklyHealthRationale</code> string is stored alongside the weekly report and displayed as a small ⓘ tooltip next to the health chip in the Weekly Reports list. It shows the day-by-day breakdown and which rule applied.</p>
+            </section>
+
+            <!-- Account Health -->
+            <section id="account-health">
+                <h2>Account-Level Health</h2>
+                <p>An account (e.g. CCMH, Thrive) aggregates health across all its projects. The account health is
+                    calculated separately from individual project health.</p>
+
+                <div class="threshold-row">
+                    <div class="threshold-item green-bg">
+                        <div class="th-label">🟢 Account Green</div>
+                        <div class="th-value">0</div>
+                        <p style="font-size:13px;margin-top:6px;color:#166534;">Red or Amber projects</p>
+                    </div>
+                    <div class="threshold-item amber-bg">
+                        <div class="th-label">🟡 Account Amber</div>
+                        <div class="th-value">&lt; 30%</div>
+                        <p style="font-size:13px;margin-top:6px;color:#92400e;">of projects are Red, but at least one is
+                            Amber or Red</p>
+                    </div>
+                    <div class="threshold-item red-bg">
+                        <div class="th-label">🔴 Account Red</div>
+                        <div class="th-value">≥ 30%</div>
+                        <p style="font-size:13px;margin-top:6px;color:#991b1b;">of projects are Red (threshold is
+                            configurable per account)</p>
+                    </div>
+                </div>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div>If any project is flagged Red, it will always be listed explicitly in the account report's risk
+                        section — even if the overall account health is still Amber or Green.</div>
+                </div>
+            </section>
+
+            <!-- Report Types -->
+            <section id="report-types">
+                <h2>Report Types</h2>
+                <div class="pills">
+                    <div class="pill">📅 Daily</div>
+                    <div class="pill">📆 Weekly (Project)</div>
+                    <div class="pill">🏢 Weekly (Account)</div>
+                    <div class="pill">📆 Monthly</div>
+                    <div class="pill">👥 Team Performance</div>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Input</th>
+                        <th>What it covers</th>
+                        <th>Formats</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Daily Project</strong></td>
+                        <td>Project, Date</td>
+                        <td>Work done today, blockers, plan for tomorrow, health score</td>
+                        <td>Dashboard / JSON</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weekly Project</strong></td>
+                        <td>Project, Date range</td>
+                        <td>Aggregated daily reports. Trend analysis, velocity, achievements</td>
+                        <td>Dashboard / Excel</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Account Weekly</strong></td>
+                        <td>Account, Date range</td>
+                        <td>Portfolio view across all projects. Account health, key risks, action items</td>
+                        <td>Excel / PowerPoint</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monthly</strong></td>
+                        <td>Project, Month</td>
+                        <td>Long-term trend, delivery performance, persistent risks</td>
+                        <td>Dashboard</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Team Performance</strong></td>
+                        <td>Project, Sprint(s) or date range, Team members</td>
+                        <td>Per-developer delivery %, SP planned vs done, pipeline breakdown, velocity trends, Kanban date-range history</td>
+                        <td>Dashboard (bar charts)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Program Reports -->
+            <section id="program-reports">
+                <h2>Program-Level Reports</h2>
+                <p>A <strong>Program</strong> is a named grouping of projects <em>within a single account</em> (a program
+                    never spans accounts). Programs are administered under <strong>Administration → Programs</strong> by
+                    admins/superusers, who assign projects and designate program owners. Program reports roll up the
+                    underlying project reports into one consolidated, leadership-ready view — the program equivalent of an
+                    account report, but scoped to just that program's projects.</p>
+
+                <div class="pills">
+                    <div class="pill">📅 Daily Program</div>
+                    <div class="pill">📆 Weekly Program</div>
+                    <div class="pill">🗓️ Monthly Program</div>
+                </div>
+
+                <h3>What a program report contains</h3>
+                <p>Each cadence pulls every <strong>active, non-shared</strong> project in the program, loads (or generates
+                    on the fly) that project's report for the period, and produces a single consolidated deck:</p>
+                <ul style="margin-left:20px; margin-bottom:12px;">
+                    <li>AI executive summary across all program projects</li>
+                    <li>Key accomplishments and an explicit <strong>red-project list</strong></li>
+                    <li>Collated manager insights (rolled up from the project reports)</li>
+                    <li>Consolidated risks and action items</li>
+                    <li>An overall program health rating</li>
+                </ul>
+
+                <h3>How it works</h3>
+                <table>
+                    <tr><th>Aspect</th><th>Behaviour</th></tr>
+                    <tr>
+                        <td><strong>Weekly business week</strong></td>
+                        <td>Weekly program reports enforce a <strong>Friday–Thursday</strong> week (start must be a Friday,
+                            end a Thursday, same calendar week). Legacy Sun–Sat reports cannot be regenerated.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Health</strong></td>
+                        <td>Deterministic override using the program's <code>redThresholdPercentage</code> (falls back to the
+                            account threshold, else 30%). If red-project % ≥ threshold → Red; else any Red/Amber → Amber;
+                            else Green. The <em>more severe</em> of the AI verdict vs. the deterministic result wins.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Caching &amp; queueing</strong></td>
+                        <td>Reports are cached by (program, week/month, year). If none exists yet, the user is prompted to
+                            <strong>"Queue your request"</strong> — generation runs asynchronously on a background queue.
+                            A program with no projects returns an error.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output format</strong></td>
+                        <td>A downloadable <strong>PowerPoint (PPTX)</strong> deck, re-rendered from stored report data.
+                            Re-downloading never re-runs the AI — it rebuilds the file from the saved report.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Coverage tracking</strong></td>
+                        <td>Each report records <code>projectsIncluded</code> and <code>projectsMissing</code>, so gaps in
+                            coverage are explicit rather than silent.</td>
+                    </tr>
+                </table>
+
+                <div class="callout warning">
+                    <div class="callout-icon">🔐</div>
+                    <div><strong>Visibility is owner-based, not account-inherited.</strong> Superusers and admins see all
+                        non-empty programs. Everyone else sees <strong>only programs where they are an explicit program
+                        owner</strong> (a program-scoped permission). Having access to the account does <em>not</em> grant
+                        visibility of that account's program reports.</div>
+                </div>
+            </section>
+
+            <!-- Executive Summaries -->
+            <section id="exec-summaries">
+                <h2>Executive-Ready Summaries</h2>
+                <p>All AI-generated executive summaries are written for senior leadership and CEOs who have no Jira
+                    access. The AI is explicitly instructed to describe work in <strong>functional and business themes
+                    only</strong>.</p>
+
+                <div class="callout warning">
+                    <div class="callout-icon">🚫</div>
+                    <div>
+                        <strong>Ticket ID ban</strong> — Jira ticket IDs (e.g. <code>PROJ-123</code>) are <strong>never
+                        permitted</strong> in: Executive Summary, Key Risks, or Plan for Tomorrow / Executive Plan.
+                        Ticket IDs are only allowed in: Work Summary and the Ticket-Level Details section.<br><br>
+                        <strong>Praise-free rule</strong> — Generic morale statements are <strong>forbidden</strong> in all
+                        executive fields: "the team made excellent progress", "outstanding results", "strong velocity",
+                        "commendable effort". Every sentence must name a specific feature, module, capability, or
+                        factual delivery outcome.
+                    </div>
+                </div>
+
+                <h3>What Summaries Look Like</h3>
+                <table>
+                    <tr>
+                        <th>❌ Rejected (ID or praise)</th>
+                        <th>✅ Accepted (specific + factual)</th>
+                    </tr>
+                    <tr>
+                        <td>"LOSAI-6066 deployment moved to Testing phase."</td>
+                        <td>"Payment integration advanced through testing, with document management component awaiting business sign-off."</td>
+                    </tr>
+                    <tr>
+                        <td>"SC-1180 and SC-1181 completed and merged."</td>
+                        <td>"Authentication and session management improvements were completed and integrated."</td>
+                    </tr>
+                    <tr>
+                        <td>"The team made excellent progress this week."</td>
+                        <td>"Loan origination module completed UAT; bulk upload feature passed QA and is pending deployment sign-off."</td>
+                    </tr>
+                    <tr>
+                        <td>"Key Risk: LP-204 is blocked." (in keyRisks field)</td>
+                        <td>"Key Risk: Bulk export feature blocked pending third-party API credentials from vendor."</td>
+                    </tr>
+                </table>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>These rules apply at all report levels: daily, weekly project, and account weekly. The only
+                    exception is the Ticket-Level Details section (daily DSR only) where ticket IDs are explicitly
+                    required for traceability.</div>
+                </div>
+            </section>
+
+            <!-- Health Rationale UI -->
+            <section id="health-rationale">
+                <h2>Health Rationale — Transparent ⓘ Tooltip</h2>
+                <p>Every daily and weekly project report now shows a small <strong>ⓘ icon</strong> next to the health
+                    chip. Hovering it reveals the deterministic rationale — the exact numbers used to derive the colour
+                    — so health decisions are never opaque.</p>
+
+                <h3>Daily Report Rationale</h3>
+                <p>Stored in the <code>health_rationale</code> column of <code>daily_board_snapshots</code>. Example:</p>
+                <div class="callout info" style="font-family: monospace; font-size: 13px;">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>Health: Amber. Axis 1 (Blocked): 2/9 WIP (22.2%) ≥ 20% threshold → Amber. Axis 2 (Prod Bugs): 0 bugs → Green. Sprint: 4 done + 2 in QA (0.6 credit) of 10 → 52% weighted, 45% elapsed → 7% ahead. Final: Amber (one axis).</div>
+                </div>
+
+                <h3>Weekly Report Rationale</h3>
+                <p>Stored in <code>weekly_health_rationale</code> on <code>project_weekly_reports</code>. Example:</p>
+                <div class="callout info" style="font-family: monospace; font-size: 13px;">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>Week status: Amber. Daily: 2026-03-17=Green, 2026-03-18=Amber, 2026-03-19=Green, 2026-03-20=Green, 2026-03-21=Green. Rule: strict majority Red (&gt;2 of 5 days) → Red; any Red/Amber day → Amber; all Green → Green.</div>
+                </div>
+
+                <p>The rationale is generated deterministically by the report engine (not by AI) and stored at report
+                    generation time. Older reports generated before this feature will not have the tooltip.</p>
+            </section>
+
+            <!-- Ticket-Level Details -->
+            <section id="ticket-details">
+                <h2>Ticket-Level Details (Daily DSR)</h2>
+                <p>Daily reports include a collapsed <strong>Ticket-Level Details</strong> accordion that provides a
+                    one-line activity log for every ticket that had real work done that day. This is the <em>only
+                    place</em> Jira ticket IDs appear in a DSR — executive sections are always ID-free.</p>
+
+                <h3>Format</h3>
+                <div class="callout info" style="font-family: monospace; font-size: 13px; white-space: pre-wrap;">
+                    <div class="callout-icon">📋</div>
+                    <div>- LP-204: [Story] bulk export API completed, moved to QA
+- LP-211: [Bug] null pointer in loan calculator fixed, in Code Review
+- LP-198: [Task] infrastructure upgrade script tested successfully, Done</div>
+                </div>
+
+                <h3>Rules</h3>
+                <ul style="margin-left:20px; margin-top:8px;">
+                    <li>Only tickets with actual activity that day are listed (not backlog or context-only tickets)</li>
+                    <li>One line per ticket: <code>- KEY: [issuetype] brief description, current status</code></li>
+                    <li>Maximum 15 words per line</li>
+                    <li>Up to 15 tickets per report</li>
+                    <li>Generated by AI and stored in the <code>ticket_details</code> column — collapsed by default in the UI</li>
+                </ul>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div>The ticket details section is for operational traceability (delivery leads, project managers). The executive sections above it are for senior stakeholders who need business outcomes, not ticket numbers.</div>
+                </div>
+            </section>
+
+            <!-- Team Performance -->
+            <section id="team-performance">
+                <h2>Team Performance Analytics</h2>
+                <p>An on-demand analytics module for reviewing delivery metrics across sprints or date ranges. It operates
+                    independently of the automated daily/weekly report pipeline — you choose the project, members, and
+                    sprint(s) on demand. All numbers are sourced from synced Jira data stored as performance facts
+                    (<code>PerfTicketFact</code> + <code>PerfMemberScore</code> + <code>PerfSprintSync</code>), so the same
+                    figures reconcile across the Board, the Trends charts, and Delivery Presentations.</p>
+
+                <p>The module has <strong>two top-level views</strong> in the navigation:</p>
+                <div class="pills" style="display:flex; gap:8px; flex-wrap:wrap; margin: 16px 0;">
+                    <div class="pill">📋 Board View</div>
+                    <div class="pill">📈 Trends</div>
+                </div>
+                <p><strong>Board View</strong> is a single-project, single-sprint scoreboard (it internally holds the Sprint
+                    Report, per-member Scorecard, and Team History sub-views). <strong>Trends</strong> is a cross-project,
+                    account-wide set of time-series charts. Each is documented below.</p>
+
+                <h3 id="tp-board-view">Board View</h3>
+                <p>Pick an <strong>Account → Project → Sprint</strong>, then generate. Kanban projects render a span-based
+                    variant; Excel-sourced projects render a reduced <em>Excel Sprint Board</em>. The view combines several
+                    panels — a scorecard⇄trends toggle and a <strong>V2-only ⇄ Whole-Team</strong> scope toggle sit at the
+                    top, alongside sync controls (sprint / Kanban / cycle sync, recompute, retry) and ticket drilldowns.</p>
+                <table>
+                    <tr><th>Panel</th><th>Details</th></tr>
+                    <tr><td><strong>Delivery cards</strong></td><td>Overall Delivery %, V2 Delivery %, total spillover SP,
+                        V2 spillover SP</td></tr>
+                    <tr><td><strong>Sprint summary</strong></td><td>SP Planned vs SP Done for the selected sprint</td></tr>
+                    <tr><td><strong>Performance Scorecard</strong></td><td>Per-developer and per-QA tables. QA metrics include
+                        New Bugs, weighted severity, a Quality composite rating (Excellent / Good / Fair bands), Tested count,
+                        QA Cycle time, and Escape %</td></tr>
+                    <tr><td><strong>Drilldowns</strong></td><td>Ticket-level drilldown and per-member score-breakdown modals,
+                        plus a methodology doc</td></tr>
+                </table>
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Access:</strong> Board View is <strong>read-only down to members</strong> — anyone can view
+                        the scoreboard, but triggering a sync or recompute requires lead-or-above.</div>
+                </div>
+
+                <h3>Sprint Report</h3>
+                <p>Select a sprint and one or more team members to get a full per-sprint breakdown:</p>
+                <table>
+                    <tr><th>Section</th><th>Details</th></tr>
+                    <tr><td><strong>Summary cards</strong></td><td>SP planned, SP done, delivery %, spillover count for the whole team selection</td></tr>
+                    <tr><td><strong>Sprint progress</strong></td><td>% of sprint window elapsed vs. work completed — useful for mid-sprint risk assessment</td></tr>
+                    <tr><td><strong>Member table</strong></td><td>Per-developer: SP planned / done / delivery % / pipeline breakdown (In Progress, QA, UAT, Done)</td></tr>
+                    <tr><td><strong>Late QA movers</strong></td><td>Tickets moved to QA after the sprint midpoint — potential closure risk</td></tr>
+                    <tr><td><strong>Scope changes</strong></td><td>Tickets added or removed after sprint start</td></tr>
+                </table>
+
+                <h3>Team History — Scrum Projects</h3>
+                <p>Select team members and click "Load History". Each developer gets a card showing the last 3 closed sprints plus the current active sprint:</p>
+                <ul>
+                    <li><strong>Bar chart:</strong> Planned SP (light blue) vs Done SP (colour-coded by delivery %) for each closed sprint</li>
+                    <li><strong>Tooltip:</strong> Hover bars to see full sprint name and exact delivery percentage</li>
+                    <li><strong>Current sprint section:</strong> SP done so far, delivery %, and live pipeline breakdown chips</li>
+                </ul>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Bar colour logic:</strong> Green ≥ 80% delivery, Amber 50–79%, Red &lt; 50%. Provides instant visual signal of who is consistently delivering vs. who may need support.</div>
+                </div>
+
+                <h3>Team History — Kanban Projects</h3>
+                <p>Kanban projects have no sprints. Team History shows a custom date-range velocity analysis instead:</p>
+                <table>
+                    <tr><th>Input</th><th>Effect</th></tr>
+                    <tr><td><strong>Start date / End date</strong></td><td>Overall analysis window (default: last 90 days)</td></tr>
+                    <tr><td><strong>Period slice (days)</strong></td><td>Divide window into equal N-day buckets (e.g. 15-day slices over 90 days = 6 periods)</td></tr>
+                </table>
+                <p>Each developer card shows tickets delivered (moved to Done) per period as a bar chart, plus average velocity and a current open-work breakdown.</p>
+
+                <h3>UAT Ticket Handling</h3>
+                <p>UAT (User Acceptance Testing) tickets are treated as V2-team-complete across all health and delivery metrics. Specific rules:</p>
+                <ul>
+                    <li><strong>Blocked axis:</strong> UAT tickets are excluded entirely from the WIP pool — they cannot contribute to blocked % regardless of assignee or status</li>
+                    <li><strong>Sprint burndown:</strong> UAT tickets count as 1.0 (fully done) — same weight as Done tickets</li>
+                    <li><strong>AI summaries:</strong> Many tickets at UAT near sprint end → AI notes sprint formal closure depends on customer sign-off (one sentence, schedule dependency framing only, never framed as a team failure)</li>
+                    <li><strong>UAT assigned to a V2 team member:</strong> Minor note in AI output only (proportional, does not affect health colour)</li>
+                </ul>
+
+                <h3 id="tp-trends">Trends</h3>
+                <p>Trends is a <strong>cross-project, account/org-wide</strong> set of time-series charts (Recharts) showing
+                    how each project is trending over recent sprints. Pick an <strong>Account</strong> and a
+                    <strong>V2-only</strong> scope toggle; the view has its own sub-tab strip:</p>
+                <table>
+                    <tr><th>Sub-tab</th><th>What it shows</th></tr>
+                    <tr>
+                        <td><strong>Productivity</strong></td>
+                        <td>SP-done vs SP-planned productivity % per project (throughput SP for Kanban). Each project shows
+                            current vs. average, a trend pill (up / down / flat + %), and a health dot: Green ≥ 80%,
+                            Amber 60–80%, Red &lt; 60% delivery.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Defect Density</strong></td>
+                        <td>Bugs per 100 SP over successive sprints.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reopen Ratio</strong></td>
+                        <td>Reopened stories ÷ total stories per sprint, with invalid-reopen exclusions.</td>
+                    </tr>
+                </table>
+                <p>Each chart surfaces the current value, the running average, the direction of travel, and a health band —
+                    so a manager can spot a project sliding over time, not just its snapshot today.</p>
+
+                <div class="callout warning">
+                    <div class="callout-icon">🔐</div>
+                    <div><strong>Trends is lead-or-above only.</strong> Unlike Board View, members are explicitly blocked
+                        from the Trends route — it is a cross-project, org-wide view intended for leads and managers.</div>
+                </div>
+            </section>
+
+            <!-- Risk Management -->
+            <section id="risk-management">
+                <h2>Risk Management — The Risk Board</h2>
+                <p>A drag-and-drop <strong>Kanban board of delivery risks</strong>. Each risk is a card ("sticky note") that
+                    lives in a status lane; you drag a card between lanes to change its status. Each risk can optionally be
+                    linked to a <strong>Project</strong>. It lives under <strong>Management → Risk Board</strong>.</p>
+
+                <h3>Status lanes (how risks move)</h3>
+                <div class="flow">
+                    <div class="flow-box">🆕 New</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">🔧 In Progress</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">🕰️ Stale</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">✅ Done</div>
+                </div>
+                <ul style="margin-left:20px; margin-bottom:12px;">
+                    <li>Moving between the three active lanes (New / In Progress / Stale) <strong>requires a comment</strong> —
+                        the system rejects a status change with no note and records it on the risk's thread.</li>
+                    <li>Moving a card <strong>into Done</strong> opens a separate dialog requiring a <strong>resolution</strong>,
+                        which is stored on the risk and auto-appended as a "Closed — &lt;resolution&gt;" comment.</li>
+                    <li>Done cards are locked (not draggable). Every move emits an email notification.</li>
+                </ul>
+
+                <h3>Fields on a risk</h3>
+                <table>
+                    <tr><th>Field</th><th>Notes</th></tr>
+                    <tr><td><strong>Title / Description</strong></td><td>Required</td></tr>
+                    <tr><td><strong>Source</strong></td><td>👤 Client or 🏢 Internal (required)</td></tr>
+                    <tr><td><strong>Priority</strong></td><td>Critical / High / Medium / Low. Criticals sort first and are
+                        counted in a board header badge.</td></tr>
+                    <tr><td><strong>Notified Date</strong></td><td>Required (capped at +4 months)</td></tr>
+                    <tr><td><strong>Assignee</strong></td><td><strong>Must be a superuser</strong> (enforced server-side)</td></tr>
+                    <tr><td><strong>Project link</strong></td><td>Optional for admin/superuser; <strong>required</strong> for
+                        manager/lead</td></tr>
+                    <tr><td><strong>AI Summary</strong></td><td>Auto-generated whenever the risk is created/closed or comments
+                        change</td></tr>
+                    <tr><td><strong>Mitigation Plans &amp; Comments</strong></td><td>Child collections; comments are
+                        author-only and only the latest comment is editable</td></tr>
+                </table>
+
+                <h3>Who can access it</h3>
+                <table>
+                    <tr><th>Role</th><th>Access</th></tr>
+                    <tr><td><strong>Member</strong></td><td>No access — the board is blocked entirely</td></tr>
+                    <tr><td><strong>Lead / Manager</strong></td><td>See risks on their permitted projects only; cannot see
+                        unlinked risks or risks created by admin/superuser. <strong>Leads cannot close</strong> (mark Done).</td></tr>
+                    <tr><td><strong>Admin</strong></td><td>Permitted projects plus unlinked (no-project) risks</td></tr>
+                    <tr><td><strong>Superuser</strong></td><td>Full access to every risk</td></tr>
+                </table>
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>Risks also feed the <a href="#delivery-presentations">Delivery Presentation</a> risk list, so a risk
+                        raised here can be surfaced directly to the customer in a delivery review.</div>
+                </div>
+            </section>
+
+            <!-- Action Items -->
+            <section id="action-items">
+                <h2>Action Items</h2>
+                <p>Action items are tracked follow-ups attached to a delivery entity, with an enforced status lifecycle, a
+                    full audit trail of status changes, and threaded comments. Unlike the Risk Board, this is a filterable,
+                    paginated <strong>table</strong> under <strong>Management → Action Items</strong>, organised into three
+                    tabs by scope.</p>
+
+                <h3>Lifecycle</h3>
+                <div class="flow">
+                    <div class="flow-box">📂 Open</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">🔧 In-Progress</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">✅ Closed</div>
+                    <div class="flow-arrow">/</div>
+                    <div class="flow-box">🗑️ Discarded</div>
+                </div>
+                <p>Open can go to In-Progress, Closed, or Discarded; In-Progress can go to Closed or Discarded. Closed and
+                    Discarded are terminal. <strong>Closing OR discarding requires a note.</strong> Every create and
+                    transition writes a status-history row — the audit trail shown in the detail view.</p>
+                <p><strong>Fields:</strong> title, category (Task, Follow-up, Decision Required, Issue, Risk &amp; Mitigation,
+                    Dependency), owner, optional due date, plus comments. Comments are author-only and only the latest is
+                    editable.</p>
+
+                <h3>The three scopes</h3>
+                <table>
+                    <tr><th>Tab</th><th>Scope</th><th>Access</th></tr>
+                    <tr>
+                        <td><strong>Project</strong></td>
+                        <td>Attached to a single project</td>
+                        <td>Your accessible-project scope (server-resolved)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Program</strong></td>
+                        <td>Attached to a program</td>
+                        <td><strong>Program-report visibility</strong> — same owner-based rule as program reports</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Account</strong></td>
+                        <td>Attached to an account</td>
+                        <td>Account read (view) / account write (create, edit, transition, delete)</td>
+                    </tr>
+                </table>
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div><strong>Action Item vs. Risk:</strong> an action item is a concrete to-do with an owner and a due
+                        date; a risk is a potential problem being tracked and mitigated. Action items surface across program
+                        and account reports, the bi-weekly report, and Delivery Presentations —
+                        <a href="#delivery-presentations">delivery decks pull project + program items, but never account
+                        items</a>.</div>
+                </div>
+            </section>
+
+            <!-- Delivery Presentations -->
+            <section id="delivery-presentations">
+                <h2>Delivery Presentations</h2>
+                <p>A <strong>customer-facing, slide-based executive delivery review</strong> built for a client meeting.
+                    It is generated per <strong>Account</strong> (optionally filtered to a single <strong>Program</strong>),
+                    rendered as an on-screen slide deck, and exported to a <strong>WYSIWYG PDF</strong>. It pulls live
+                    metrics, risks, action items, milestones, and trends; lets a manager curate and edit them; supports a
+                    live present mode with speaker notes; and captures Minutes of Meeting (MOM) afterwards. It lives under
+                    its own <strong>Presentation → Delivery Presentation</strong> nav section.</p>
+
+                <h3>The 5-step build wizard</h3>
+                <div class="card">
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-body">
+                                <strong>Basics &amp; Scope</strong>
+                                <p>Title, meeting date, reporting window, overall health, project selection. Two scope modes:
+                                    <em>By Account</em> (pick any of the account's projects) or <em>By Program</em> (the
+                                    program's projects are auto-selected, whole-program). The window is either a free-form
+                                    <em>date range</em> or a single completed <em>sprint</em> (single-project only).</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-body">
+                                <strong>Highlights &amp; Risks</strong>
+                                <p>AI-generated executive summary + key highlights (achievements, blockers, capacity) and a
+                                    risk list. The summary is AI-authored but editable — a refresh never overwrites an edited
+                                    summary.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-body">
+                                <strong>Action Items &amp; Tech</strong>
+                                <p>Curated action items (project + program scope), tech recommendations, discussion points.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-body">
+                                <strong>Per-Project Drilldown</strong>
+                                <p>Per-project narrative, health (computed, with manual override), sprint metrics, quality
+                                    metrics, and per-developer team tables.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">5</div>
+                            <div class="step-body">
+                                <strong>Additional Insights</strong>
+                                <p>Custom free-text / table sections plus milestones.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>A <strong>Preview / Refresh</strong> re-pulls live metrics and <strong>additively merges</strong> action
+                    items (never overwriting edits). A "refresh needed" cue appears whenever the window or scope changes so
+                    the deck never goes stale.</p>
+
+                <h3>The per-slide V2 ⇄ Whole-Team toggle</h3>
+                <p>Scoped slides (Overview, Trends, each Drilldown) carry a compact <strong>V2 Team ⇄ Whole Team</strong>
+                    toggle; the deck <strong>defaults to Whole Team</strong>. Scope is tracked <em>per slide</em>, and the
+                    PDF reads the same map — so the export is WYSIWYG to exactly what was on screen.</p>
+                <p>Both scopes are <strong>precomputed on the backend from <code>PerfTicketFact</code></strong> using the same
+                    formulas as Board View, so each scope reconciles to the board by construction. The toggle affects
+                    committed/delivered SP, capacity, reopens &amp; reopen %, productivity %, <strong>spillover</strong>,
+                    <strong>scope-added</strong> (mid-sprint scope creep), removed/re-estimated SP, bug counts &amp; density,
+                    team tables, and per-developer trends. Percentages are re-derived from each scope's own planned-SP
+                    denominator, so they always reconcile.</p>
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>The toggle is hidden for Kanban/WSR drilldowns and older saved presentations that predate dual-scope
+                        data. Presenters can also <strong>manually override</strong> headline tile numbers per scope; overrides
+                        apply only to the top-level tiles, never to per-sprint tables, team tables, or trend charts.</div>
+                </div>
+
+                <h3>Slides produced</h3>
+                <ul style="margin-left:20px; margin-bottom:12px;">
+                    <li>Delivery Overview (executive summary + KPI tiles)</li>
+                    <li>Highlights, Risks &amp; Actions (2×2 quadrant)</li>
+                    <li>Trends (velocity / quality over the last 5 completed sprints)</li>
+                    <li>Team Capacity (optional, hidden by default)</li>
+                    <li>Additional Insights (paginated custom sections)</li>
+                    <li>Per-Project Drilldown (one per project; includes a live "Current Sprint" in-flight card)</li>
+                    <li>Additional Discussion Points</li>
+                </ul>
+
+                <h3>Present mode &amp; Minutes of Meeting</h3>
+                <p>The viewer has a <strong>review</strong> mode (internal — all controls: Edit, MOM, Manage Trends, Download
+                    PDF) and a clean <strong>present</strong> mode (customer-facing — controls hidden). During a presentation
+                    you can type <strong>presenter notes per slide</strong>; these feed <strong>MOM</strong> generation, which
+                    can be AI-drafted from a transcript + notes (capped at 3 regenerations), saved as a draft, then accepted.
+                    Presentations can also be duplicated/cloned, deleted, and locked.</p>
+
+                <div class="callout warning">
+                    <div class="callout-icon">🔐</div>
+                    <div><strong>Access:</strong> Superusers/admins have full access. Create/duplicate is limited to those,
+                        plus a manager/lead who has access to at least one selected project. In the list/view, non-privileged
+                        users only see presentations that include ≥1 project they can access. Note: unlike Program reports
+                        (PPTX), Delivery Presentations export to <strong>PDF only</strong>.</div>
+                </div>
+            </section>
+
+            <!-- Excel / CSV Projects -->
+            <section id="excel-projects">
+                <h2>Excel / CSV-Driven Projects</h2>
+                <p>Not every project is connected to Jira. A project's data source is set at creation to
+                    <strong>Jira</strong>, <strong>Azure DevOps</strong>, or <strong>Excel Upload</strong>. For an Excel
+                    project, work-item data is uploaded as a spreadsheet each reporting period instead of being pulled from
+                    Jira — but from there it flows through the <strong>exact same health engine and report pipeline</strong>.</p>
+
+                <h3>Step 1 — Onboarding &amp; column mapping (once)</h3>
+                <p>When an admin creates the project with Source = "Excel Upload", they upload a <strong>sample
+                    spreadsheet</strong>. Its header row is read in the browser, and the admin maps each of the app's
+                    canonical fields to a column from the sample. This is how <strong>arbitrary customer headers</strong>
+                    ("Ticket #", "Owner", "State"…) are translated to the app's internal fields.</p>
+                <table>
+                    <tr><th>Canonical field</th><th>Required?</th></tr>
+                    <tr><td>External ID, Title, Type, Status, Assignee Email, Created Date, Last Updated</td>
+                        <td>Required (all templates)</td></tr>
+                    <tr><td>Sprint Name, Sprint Start Date, Sprint End Date</td><td>Required for Scrum-style projects</td></tr>
+                    <tr><td>Priority, Story Points (or Estimated Hours), Parent/Epic, Labels, Done Date, Status Changed On</td>
+                        <td>Optional</td></tr>
+                </table>
+                <p>The mapping is stored in a dedicated <code>template_mappings</code> table (one row per project), which the
+                    project points to. At upload time the validator uses "use the mapped customer header if present, else fall
+                    back to the canonical default header" — the single translation seam for the whole feature.</p>
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>A project also carries a <strong>reporting frequency</strong> (Daily or Sprint). Daily projects
+                        produce daily DSRs on each upload; Sprint projects feed the <strong>Excel Sprint Board</strong> in
+                        Team Performance instead.</div>
+                </div>
+
+                <h3>Step 2 — Upload period data (each period)</h3>
+                <p>From the <strong>Data Imports</strong> page, the user picks the account and Excel project, optionally
+                    downloads a pre-formatted template (built-in <em>scrum</em> or <em>kanban</em>), chooses a report date
+                    (or relies on the sprint columns), and selects a file.</p>
+                <ul style="margin-left:20px; margin-bottom:12px;">
+                    <li><strong>Formats:</strong> .xlsx, .xls, and .csv (the picker offers .xlsx / .csv); 20 MB limit. CSV is
+                        reshaped through the identical validation path.</li>
+                    <li><strong>Optional "Status History" sheet</strong> (External ID, From/To Status, Changed On, Changed By)
+                        unlocks full-fidelity cycle-time and reopen metrics; without it, metrics run in "approximate" fidelity.</li>
+                </ul>
+
+                <h3>Step 3 — Validation (before anything is saved)</h3>
+                <p>Every upload is validated as a <strong>dry run</strong> first — no data is written until you confirm. A
+                    two-pass check runs <em>strict</em>, then falls back to <em>best-effort</em> with fuzzier coercion:</p>
+                <ul style="margin-left:20px; margin-bottom:12px;">
+                    <li>Required headers per template must be present; header matching is fuzzy (case, spacing, punctuation).</li>
+                    <li>Per row: External ID, Title, Status, Created Date, Last Updated are required.</li>
+                    <li>Type is normalised to Story / Task / Bug / Spike / Epic / Sub-task (aliases like "defect" → Bug handled).</li>
+                    <li>Duplicate External IDs are rejected. Dates accept real dates, Excel serial numbers, or parseable strings.</li>
+                </ul>
+                <p>The UI shows the validation status, the mode used (strict / best-effort), row and history counts, and
+                    tables of any errors and coercions to review. <strong>Confirm &amp; Import</strong> is enabled only when
+                    validation passes.</p>
+
+                <h3>Step 4 — Report generation (same engine as Jira)</h3>
+                <p>On confirm, the upload is persisted (imports, work items, status history, and any sprints found in the
+                    rows). Reports always read the <strong>latest applied import</strong>, so re-uploading the same period
+                    supersedes the previous snapshot. Behind the scenes each Excel row is reshaped into the same internal
+                    "issue" envelope that Jira issues use — including a synthesised change history — so blocked-today
+                    detection, activity gating, and the two-axis health engine all run <strong>identically</strong>. A daily
+                    or weekly upload automatically queues the standard DSR generation job; the resulting report appears on the
+                    Daily Reports page just like a Jira project's.</p>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div>Because the data is normalised to the Jira shape immediately after upload, <strong>everything else in
+                        this guide — filtering, health scoring, executive summaries, Team Performance — applies to Excel
+                        projects unchanged.</strong> The only difference is where the raw data comes from.</div>
+                </div>
+            </section>
+
+            <!-- Manager Insights -->
+            <section id="manager-insights">
+                <h2>Manager Insights</h2>
+                <p>A layered annotation system lets team leads and managers add human context that Jira data alone cannot capture — escalations, customer concerns, verbal feedback, or any situation-specific commentary.</p>
+
+                <h3>The Insight Cascade</h3>
+                <div class="flow" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="flow-box" style="background:#faf5ff; border-color:#e9d5ff; color:#7c3aed; font-weight:600;">📝 Daily (manual)</div>
+                        <span style="color:var(--text-muted); font-size:13px;">Team lead enters free-text context directly — no AI involved</span>
+                    </div>
+                    <div style="padding-left:28px; color:var(--text-muted);">↓ AI collates all daily insights during WSR generation</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="flow-box" style="background:#faf5ff; border-color:#e9d5ff; color:#7c3aed; font-weight:600;">🤖 Weekly Project (AI-collated)</div>
+                        <span style="color:var(--text-muted); font-size:13px;">Concise summary of the week's daily insights — editable after generation</span>
+                    </div>
+                    <div style="padding-left:28px; color:var(--text-muted);">↓ AI collates all project insights during Account WSR generation</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="flow-box" style="background:#faf5ff; border-color:#e9d5ff; color:#7c3aed; font-weight:600;">🤖 Account Weekly (AI-collated)</div>
+                        <span style="color:var(--text-muted); font-size:13px;">Account-level narrative across all projects — editable after generation</span>
+                    </div>
+                </div>
+
+                <h3>How Insights Influence Executive Summaries</h3>
+                <p>At weekly and account levels, if manager insights are present <em>when the report is generated</em>, they are incorporated into the executive summary in the <strong>same AI call</strong> — not as a post-processing patch. This means the summary is written with full awareness of the human context from day one.</p>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div>If a manager edits their insights <em>after</em> a report has been generated, a <strong>Preview → Accept</strong> flow lets them review a side-by-side diff of the old and proposed executive summary before committing the change.</div>
+                </div>
+
+                <h3>Behavior by Level</h3>
+                <table>
+                    <tr>
+                        <th>Level</th>
+                        <th>Who Sets It</th>
+                        <th>AI Involvement</th>
+                        <th>Effect on Summary</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Daily</strong></td>
+                        <td>Team lead — typed directly</td>
+                        <td>None</td>
+                        <td>Stored for WSR collation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weekly Project</strong></td>
+                        <td>Auto-collated from daily insights</td>
+                        <td>Yes — <code>collateWeeklyInsights()</code></td>
+                        <td>Baked into <code>executive_summary</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Account Weekly</strong></td>
+                        <td>Auto-collated from project insights</td>
+                        <td>Yes — <code>collateAccountInsights()</code></td>
+                        <td>Baked into account <code>summary</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- FAQ -->
+            <section id="faq">
+                <h2>Frequently Asked Questions</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why is my project showing Amber when we only have one blocked ticket?</h3>
+                    <p>One blocked ticket alone won't trigger Amber unless your total WIP pool is very small (4 or fewer
+                        tickets). If you see Amber with one blocked ticket, check whether there are also active
+                        production bugs in the sprint — the combination of both signals can cause escalation.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why didn't my ticket appear in today's report?</h3>
+                    <p>The most common reasons: (1) the assignee is not registered as a team member for the project, (2)
+                        the ticket had no qualifying activity in the report window — a comment or status change is
+                        needed, (3) the ticket is in Done status and was filtered out.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What counts as a "production bug" for health scoring?</h3>
+                    <p>Only Jira tickets where the <em>Issue Type</em> is set to <strong>Bug</strong>. The tool does not
+                        scan ticket titles or descriptions for the word "bug". If a bug is logged as a Story or Task it
+                        won't count toward the bug score — but you should raise it as a Bug type in Jira for accurate
+                        reporting.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Can the Amber threshold be changed for our account?</h3>
+                    <p>Yes. The threshold (default 20%) is stored per account in the database. Contact your admin or
+                        delivery manager to update it. No code changes or deployments are needed.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">The report says "No Activity Found" — why?</h3>
+                    <p>This means no team tickets had qualifying activity (status change, comment, or PR commit) within
+                        the report window. This usually happens on holidays, or if work was done but not logged in Jira.
+                        The report window is typically from the previous evening's report up to the current report time.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">How are weekend activities handled?</h3>
+                    <p>If a ticket has activity on a Saturday or Sunday (IST), it is flagged as "Weekend Activity" and
+                        explicitly called out in the Executive Summary. This gives visibility to efforts made outside
+                        regular working hours.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why do UAT tickets count toward delivery % in Team Performance?</h3>
+                    <p>UAT (User Acceptance Testing) is the customer's or Product Owner's responsibility. When a ticket reaches UAT, V2's development work is complete. Counting UAT as done accurately reflects the team's delivery. Sprint formal closure may still depend on the customer signing off — this is treated as a schedule dependency, not a team failure.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">My Kanban project shows no sprints in Team Performance — is that normal?</h3>
+                    <p>Yes. Kanban projects have no sprint structure by design. In the Team History tab, Kanban projects show the date-range velocity view instead: pick a start and end date, choose a period slice duration (e.g. 15 days), and the system calculates how many tickets each developer delivered in each slice.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What does "spillover" mean in the Sprint Report?</h3>
+                    <p>Spillover tickets were in the sprint at its start but did not reach Done by the sprint end date — they carry over to the next sprint. A high spillover count is a leading indicator that commitment sizing may need adjustment.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why is my project Amber even though most of the week was Green?</h3>
+                    <p>The weekly health uses a majority rule: only a strict majority (&gt; 50%) of days need to be Red for the week to turn Red. Any single Red or Amber day is enough to make the week Amber. Hover the ⓘ icon next to the health chip to see the full day-by-day breakdown.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why does the health colour change when I regenerate a report?</h3>
+                    <p>Health is recalculated from live Jira data at generation time. If tickets were moved, bugs were resolved, or QA work was completed since the last generation, the new calculation will reflect those changes. The ⓘ tooltip shows the exact numbers used so you can see what changed.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Where can I see ticket IDs for today's work?</h3>
+                    <p>Open any daily report and expand the <strong>Ticket-Level Details</strong> accordion (collapsed by default below the Detailed Work Summary). It shows a per-ticket log with Jira IDs, issue types, and a one-line description of what was done. Executive sections above it are always ID-free.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why does my QA work improve the sprint burndown differently from In Progress work?</h3>
+                    <p>A ticket in QA receives 0.6 weighted credit (versus 0 for In Progress). This reflects that QA work is near-complete — development and code review are done, only testing remains. This prevents a sprint full of late-stage QA work from looking falsely behind pace. The health rationale tooltip shows the QA count and partial credit calculation.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">I have access to the account — why can't I see its program report?</h3>
+                    <p>Program report visibility is <strong>owner-based, not account-inherited</strong>. Only superusers,
+                        admins, and users who are explicitly designated <strong>program owners</strong> can see a program's
+                        reports. Ask an admin to add you as an owner of that program.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why does the Delivery Presentation default to "Whole Team"?</h3>
+                    <p>Customer meetings usually discuss the entire delivery, so the deck defaults to Whole Team. Every scoped
+                        slide has a <strong>V2 Team ⇄ Whole Team</strong> toggle, tracked <em>per slide</em>, and the PDF
+                        exports exactly what is on screen. Both scopes are precomputed from the same performance data as the
+                        Board View, so the numbers always reconcile.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">How do I report on a project that isn't in Jira?</h3>
+                    <p>Create the project with Source = <strong>Excel Upload</strong> and map your spreadsheet's columns to the
+                        app's canonical fields once. Then upload a work-item file (.xlsx or .csv) each period from the Data
+                        Imports page. After validation, the data runs through the same health engine and report pipeline as a
+                        Jira project — see <a href="#excel-projects">Excel / CSV Projects</a>.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">I'm a lead — why can't I close a risk?</h3>
+                    <p>By design, <strong>leads cannot mark a risk as Done</strong>. Managers, admins, and superusers can close
+                        risks; leads can create, comment on, and move risks between the active lanes (which requires a comment),
+                        but closing is reserved for higher roles.</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What's the difference between an Action Item and a Risk?</h3>
+                    <p>An <strong>action item</strong> is a concrete to-do with an owner, due date, and Open→In-Progress→
+                        Closed/Discarded lifecycle, tracked in a table across Project / Program / Account scopes. A
+                        <strong>risk</strong> is a potential problem being tracked and mitigated on a drag-and-drop board, with
+                        priority, source, mitigation plans, and a resolution on close. Use an action item for "someone must do
+                        X"; use a risk for "X might go wrong."</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Why can't members open the Trends tab in Team Performance?</h3>
+                    <p>Trends is a <strong>cross-project, org-wide</strong> view intended for leads and managers, so members are
+                        blocked from it. Members can still open <strong>Board View</strong> read-only to see a single project's
+                        sprint scoreboard.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer>
+        DSR Generator &nbsp;·&nbsp; Internal Team Guide &nbsp;·&nbsp; Last updated July 2026 (v3 — added Program reports, Team Performance Board View &amp; Trends, Risk Board, Action Items, Delivery Presentations, and Excel/CSV projects)
+    </footer>
+
+</body>
+
+</html>

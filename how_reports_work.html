@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How the Automated Reporting System Works</title>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #dbeafe;
+            --primary-dark: #1e3a8a;
+            --green: #15803d;
+            --green-bg: #dcfce7;
+            --amber: #b45309;
+            --amber-bg: #fef3c7;
+            --red: #b91c1c;
+            --red-bg: #fee2e2;
+            --purple: #7c3aed;
+            --purple-bg: #faf5ff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        ::selection {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        header ::selection {
+            background: rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #2563eb 100%);
+            color: #fff;
+            padding: 56px 40px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(255,255,255,0.05)"/></svg>');
+            opacity: 0.3;
+        }
+
+        header .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        header .subtitle {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            margin-bottom: 24px;
+            max-width: 700px;
+        }
+
+        header .meta {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        /* ── Layout ──────────────────────────────────────── */
+        .wrapper {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        /* ── Sidebar Nav ─────────────────────────────────── */
+        nav {
+            width: 260px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 24px;
+        }
+
+        nav .nav-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        nav a {
+            display: block;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13.5px;
+            border-left: 3px solid transparent;
+            margin-bottom: 3px;
+            transition: all 0.2s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+            transform: translateX(2px);
+        }
+
+        nav a.indent {
+            padding-left: 28px;
+            font-size: 12.5px;
+        }
+
+        /* ── Main Content ────────────────────────────────── */
+        main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        section {
+            margin-bottom: 64px;
+            animation: fadeIn 0.4s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 28px 0 14px;
+            color: var(--primary);
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            color: var(--text);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        ul {
+            margin-left: 20px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* ── Cards ───────────────────────────────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* ── Collapsible Sections ────────────────────────── */
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapsible::before {
+            content: '▼';
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+
+        .collapsible.collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 5000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s;
+            opacity: 1;
+        }
+
+        .collapsible-content.hidden {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        /* ── Visual Flow Diagrams ────────────────────────── */
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, #f8fafc, #ffffff);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .flow-box {
+            background: var(--card);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.1);
+            transition: all 0.3s;
+        }
+
+        .flow-box:hover {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .flow-arrow {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* ── Step Flow ───────────────────────────────────── */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step:hover {
+            background: #f8fafc;
+            padding-left: 8px;
+            padding-right: 8px;
+            border-radius: 6px;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            box-shadow: 0 2px 6px rgba(30, 64, 175, 0.3);
+        }
+
+        .step-body strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .step-body p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ── Health Badges ───────────────────────────────── */
+        .badge-green,
+        .badge-amber,
+        .badge-red,
+        .badge-blue,
+        .badge-purple {
+            display: inline-block;
+            border-radius: 14px;
+            padding: 3px 12px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid;
+        }
+
+        .badge-green {
+            background: var(--green-bg);
+            color: var(--green);
+            border-color: var(--green);
+        }
+
+        .badge-amber {
+            background: var(--amber-bg);
+            color: var(--amber);
+            border-color: var(--amber);
+        }
+
+        .badge-red {
+            background: var(--red-bg);
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .badge-blue {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .badge-purple {
+            background: var(--purple-bg);
+            color: var(--purple);
+            border-color: var(--purple);
+        }
+
+        /* ── Callouts ────────────────────────────────────── */
+        .callout {
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 18px 0;
+            font-size: 14px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .callout.info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .callout.warning {
+            background: var(--amber-bg);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .callout.tip {
+            background: var(--green-bg);
+            border-left: 4px solid #22c55e;
+        }
+
+        .callout.danger {
+            background: var(--red-bg);
+            border-left: 4px solid var(--red);
+        }
+
+        /* ── Code Blocks ─────────────────────────────────── */
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 16px 0;
+        }
+
+        code {
+            background: #f1f5f9;
+            color: #e11d48;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        pre code {
+            background: transparent;
+            color: #e2e8f0;
+            padding: 0;
+        }
+
+        /* ── Tables ──────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 14px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(to bottom, #f1f5f9, #e2e8f0);
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* ── Defense Layers ──────────────────────────────── */
+        .defense-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .layer {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-left: 6px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .layer:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(4px);
+        }
+
+        .layer-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .layer-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ── Report Type Pills ───────────────────────────── */
+        .pills {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .pill {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 24px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .pill:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* ── Glossary ────────────────────────────────────── */
+        .glossary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .glossary-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .glossary-term {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .glossary-def {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ── Footer ──────────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            background: var(--card);
+        }
+
+        /* ── Responsive ──────────────────────────────────── */
+        @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+
+            .glossary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="badge">Internal Guide</div>
+            <h1>How the Automated Reporting System Works</h1>
+            <p class="subtitle">Simple, non-technical explanations for managers, executives, and anyone who wants to
+                understand the system</p>
+            <div class="meta">Last updated: March 2026 &nbsp;·&nbsp; DSR Generator (UAT exclusion, QA partial credit, WSR majority rule, health rationale, ticket details)</div>
+        </div>
+    </header>
+
+    <div class="wrapper">
+
+        <!-- Sidebar Nav -->
+        <nav>
+            <div class="nav-title">On this page</div>
+            <a href="#big-picture">The Big Picture</a>
+            <a href="#daily-report">Daily Status Report</a>
+            <a href="#weekly-report">Weekly Project Report</a>
+            <a href="#account-report">Weekly Account Report</a>
+            <a href="#monthly-report">Monthly Project Report</a>
+            <a href="#shared-team">Shared Team Reports</a>
+            <a href="#team-performance">Team Performance</a>
+            <a href="#exec-summaries">Executive Summaries</a>
+            <a href="#exec-summaries" class="indent">Ticket-Level Details</a>
+            <a href="#exec-summaries" class="indent">Health Rationale ⓘ</a>
+            <a href="#manager-insights">Manager Insights</a>
+            <a href="#ai-engine">AI Engine (Claude)</a>
+            <a href="#ai-engine" class="indent">AI Methods</a>
+            <a href="#quality-assurance">Quality Assurance</a>
+            <a href="#quality-assurance" class="indent">4-Layer Defense</a>
+            <a href="#complete-flow">Complete System Flow</a>
+            <a href="#for-managers">For Managers</a>
+            <a href="#glossary">Glossary</a>
+        </nav>
+
+        <main>
+
+            <!-- The Big Picture -->
+            <section id="big-picture">
+                <h2>The Big Picture</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What This System Does</h3>
+                    <p>Think of this system as a <strong>smart assistant</strong> that:</p>
+                    <ul>
+                        <li>Reads your Jira boards every day and writes daily status reports automatically</li>
+                        <li>Understands what each team member is working on by filtering Jira activity within a 24-hour window</li>
+                        <li>Calculates project health deterministically (rule-based, not AI opinion)</li>
+                        <li>Summarises weekly, monthly, and account-level progress using Claude AI (Sonnet model)</li>
+                        <li>Combines multiple projects into executive summaries and generates PowerPoint + Excel deliverables</li>
+                        <li>Guards against AI hallucinations through a 4-layer defence system</li>
+                    </ul>
+                </div>
+
+                <h3>The Reporting Hierarchy</h3>
+                <pre>
+                    Daily Status Reports            ← AI-generated from Jira
+                           ↓
+                    (Collected for a week)
+                           ↓
+                   Weekly Project Reports           ← AI-generated from daily reports
+                           ↓
+              ┌────────────┴────────────┐
+              ↓                         ↓
+   Weekly Account Reports       Monthly Project Reports
+   (AI + PPT + Excel)           (AI-generated)
+              ↓
+    Executive Deliverables (PPT, Excel, Web Dashboard)
+</pre>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div><strong>Simple Rule</strong>: Small reports (daily) → Medium reports (weekly) → Big reports
+                        (monthly/account-level). Each level summarizes the level below it.</div>
+                </div>
+
+                <h3>How Reports Flow Through the System</h3>
+                <div class="flow">
+                    <div class="flow-box">🗂️ Jira Boards</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">⚙️ Activity Filter</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">📊 Health Engine</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">🤖 AI Summary</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">✅ Validation</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">📄 Report (DB/Excel/PPT)</div>
+                </div>
+            </section>
+
+            <!-- Daily Status Report -->
+            <section id="daily-report">
+                <h2>Daily Status Report</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote
+                        style="border-left: 4px solid var(--primary); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "What did the team accomplish <strong>today</strong>? What's blocked? What's next?"
+                    </blockquote>
+                </div>
+
+                <h3 class="collapsible">How It Works (In Plain English)</h3>
+                <div class="collapsible-content">
+                    <div class="card">
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-num">1</div>
+                                <div class="step-body">
+                                    <strong>Fetch Tickets from Jira</strong>
+                                    <p>Fetches all tickets from active sprint (Scrum) or recently updated tickets (Kanban),
+                                        including full changelog, comments, attachments, and GitHub/PR activity.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">2</div>
+                                <div class="step-body">
+                                    <strong>Filter by Team Members</strong>
+                                    <p>Only tickets assigned to registered team members (Main/QA/UAT assignees). Smart matching
+                                        handles email variations and contractor accounts.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">3</div>
+                                <div class="step-body">
+                                    <strong>Determine Report Window</strong>
+                                    <p>Calculate time window: Yesterday 6:30 PM IST → Today 6:30 PM IST (typically 24-hour
+                                        window).</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">4</div>
+                                <div class="step-body">
+                                    <strong>Classify Ticket Activity</strong>
+                                    <p>Scan each ticket for activity within window. Classify as <span
+                                            class="badge-blue">Active</span> (had work), <span
+                                            class="badge-blue">Context</span> (no work), <span
+                                            class="badge-amber">Blocked</span>, or <span class="badge-red">Stale</span>. See
+                                        detailed breakdown below.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">5</div>
+                                <div class="step-body">
+                                    <strong>Calculate Health Score</strong>
+                                    <p>Math-based rules count blocked tickets (>3 days) and production bugs. Applies thresholds
+                                        to determine <span class="badge-green">Green</span>, <span
+                                            class="badge-amber">Amber</span>, or <span class="badge-red">Red</span> status.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">6</div>
+                                <div class="step-body">
+                                    <strong>AI Writes the Summary</strong>
+                                    <p>Claude AI reads active tickets and writes human-readable report. Summarizes work done,
+                                        groups related tasks, identifies risks, suggests tomorrow's focus. Cannot override health
+                                        score.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">7</div>
+                                <div class="step-body">
+                                    <strong>Validate AI Output</strong>
+                                    <p>TemporalValidator scans for invented time durations. Logs warnings if hallucinations
+                                        detected.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">8</div>
+                                <div class="step-body">
+                                    <strong>Save to Database</strong>
+                                    <p>Complete report stored with metadata, ready for weekly rollup and historical analysis.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Detailed: How Ticket Activity is Determined</h3>
+                <p>This is the <strong>most critical logic</strong> in the entire system. It determines which tickets appear in
+                    the "work done today" section versus "background context". All higher-level reports depend on this accuracy.
+                </p>
+
+                <h4>Step 1: Fetch Tickets from Jira</h4>
+                <table>
+                    <tr>
+                        <th>Board Type</th>
+                        <th>What Gets Fetched</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Scrum</strong></td>
+                        <td>All tickets in the active sprint + any tickets updated in last 2 days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kanban</strong></td>
+                        <td>All tickets not in "Done" status + any tickets updated in last 1 day</td>
+                    </tr>
+                </table>
+
+                <h4>Step 2: Filter by Team Members</h4>
+                <p>Only tickets assigned to registered team members are included. The system checks three assignee fields:</p>
+                <ul>
+                    <li><strong>Main Assignee</strong> - Primary person working on the ticket</li>
+                    <li><strong>QA Assignee</strong> (customfield_10440) - Person testing the ticket</li>
+                    <li><strong>UAT Assignee</strong> (customfield_10441) - Person doing user acceptance testing</li>
+                </ul>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div><strong>Smart Matching:</strong> The system matches team members by email, Jira account ID, and name. It
+                        handles email variations like "aditya.bhoir@myccmortgage.com" vs "Aditya.Bhoir_EXT@myccmortgage.com" by
+                        comparing base email parts.</div>
+                </div>
+
+                <h4>Step 3: Classify Each Ticket (Active vs Context vs Blocked vs Stale)</h4>
+                <p><strong>Report Window:</strong> Typically from yesterday 6:30 PM IST to today 6:30 PM IST</p>
+
+                <h5>Active Tickets (Work Done Today)</h5>
+                <p>A ticket is marked <span class="badge-blue">ACTIVE</span> if ANY of these activities occurred within the
+                    report window:</p>
+
+                <table>
+                    <tr>
+                        <th>Activity Type</th>
+                        <th>How Detected</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Status Change</strong></td>
+                        <td>Jira changelog shows status field changed</td>
+                        <td>"Moved from In Progress → Testing"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Comment Added</strong></td>
+                        <td>New comment created in report window</td>
+                        <td>"Developer added update: Fixed bug in payment module"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Attachment Added</strong></td>
+                        <td>Jira changelog shows attachment field changed</td>
+                        <td>"Screenshot.png attached"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ticket Created</strong></td>
+                        <td>Ticket creation date falls in window</td>
+                        <td>"New ticket created today"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GitHub/PR Activity</strong></td>
+                        <td>Development field shows commit/PR in window</td>
+                        <td>"PR merged" or "Commit pushed"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Custom Field Update</strong></td>
+                        <td>Any custom field changed (deployment, branch, etc.)</td>
+                        <td>"Deployment field updated"</td>
+                    </tr>
+                </table>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Last Resort Check:</strong> For tickets in development statuses (In Progress, Code Review, Testing)
+                        with NO Jira activity, the system checks GitHub/PR commits as a fallback. This ensures work isn't missed
+                        when developers commit code but forget to update Jira.</div>
+                </div>
+
+                <h5>Context Tickets (Background/Idle)</h5>
+                <p>A ticket is marked <span class="badge-blue">CONTEXT</span> if:</p>
+                <ul>
+                    <li>It's in the sprint/board (so relevant to the project)</li>
+                    <li>BUT it had NO activity in the report window</li>
+                    <li>Example: A ticket stuck in "Waiting for Approval" with no updates</li>
+                </ul>
+
+                <p><strong>How Context Tickets are Used:</strong></p>
+                <ul>
+                    <li>Passed to AI as background information only</li>
+                    <li>NOT mentioned in "work done today"</li>
+                    <li>Help AI understand project context and dependencies</li>
+                </ul>
+
+                <h5>Blocked Tickets</h5>
+                <p>A ticket is marked <span class="badge-amber">BLOCKED</span> if:</p>
+                <ul>
+                    <li>Current status matches configured blocked statuses (typically "Blocked", "On Hold")</li>
+                    <li>OR ticket moved to blocked status today (even if later unblocked)</li>
+                </ul>
+
+                <p><strong>Special Handling:</strong></p>
+                <ul>
+                    <li>System tracks when ticket first became blocked (from changelog)</li>
+                    <li>Calculates days blocked: Today - First Blocked Date</li>
+                    <li>Only tickets blocked >3 days impact health score (prevents false alarms)</li>
+                    <li><strong>UAT tickets are excluded entirely from the WIP pool</strong> — once a ticket reaches UAT, V2's development work is complete. UAT tickets can never contribute to blocked %, regardless of status or assignee</li>
+                </ul>
+
+                <h5>Stale Tickets</h5>
+                <p>A ticket is marked <span class="badge-red">STALE</span> if ALL of these are true:</p>
+                <ul>
+                    <li>Status is "In Progress" (or equivalent)</li>
+                    <li>Last Jira update was >3 days ago</li>
+                    <li>NO GitHub/PR activity in last 3 days (checked as fallback)</li>
+                </ul>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div><strong>Why Stale Detection Matters:</strong> Stale tickets indicate work that may be abandoned, blocked
+                        without proper status, or forgotten. They appear in the risks section but don't directly affect health color
+                        (only blocked tickets do).</div>
+                </div>
+
+                <h4>Step 4: Production Bug Classification</h4>
+                <p>Production bugs receive special handling for health calculations. The <strong>15-day sprint-relative rule</strong> determines what is "fresh" vs "planned":</p>
+
+                <table>
+                    <tr>
+                        <th>Bug Criteria</th>
+                        <th>Classification</th>
+                        <th>Health Impact</th>
+                    </tr>
+                    <tr>
+                        <td>Issue Type = "Bug"/"Sub-bug" AND Environment = "Production" AND created within 15 days of sprint start</td>
+                        <td>Fresh Production Bug</td>
+                        <td>✅ Scored (count + priority rules)</td>
+                    </tr>
+                    <tr>
+                        <td>Bug created &gt;15 days before sprint start date (Scrum) or week Monday (Kanban)</td>
+                        <td>Old Bug (Planned Work)</td>
+                        <td>❌ Completely excluded</td>
+                    </tr>
+                    <tr>
+                        <td>Sub-bug whose parent story is still active on the board</td>
+                        <td>Re-opened Story</td>
+                        <td>❌ Not scored. AI mentions as "re-opened" in workSummary only.</td>
+                    </tr>
+                    <tr>
+                        <td>Bug carried over from a previous sprint (Sprint changelog shows prior sprint)</td>
+                        <td>Spillover Bug</td>
+                        <td>⚠️ Forces Axis 2 to at least Amber. Flagged as Risk in AI output.</td>
+                    </tr>
+                    <tr>
+                        <td>Bug in "Done", "Resolved", "Closed", or "UAT" status</td>
+                        <td>Resolved / On-Plan Bug</td>
+                        <td>❌ Not Counted</td>
+                    </tr>
+                </table>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Why sprint-start-relative, not today-relative?</strong> The product team decides what enters the sprint. A bug created before the sprint preparation window (15 days before sprint start) was intentionally planned — it should not penalise the project. Only genuinely new incidents raised during or just before the sprint are tracked.</div>
+                </div>
+
+                <h3>Health Calculation Rules</h3>
+                <pre>
+┌─────────────────────────────────────────────────┐
+│           HEALTH CALCULATION RULES              │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  AXIS 1 — BLOCKED TICKETS:                      │
+│  - WIP pool = In Progress + In Review + QA      │
+│    (UAT excluded — V2 work is done at UAT)      │
+│  - Blocked % = blocked ÷ WIP pool × 100         │
+│  - If ≥ 20% blocked → Amber                     │
+│                                                 │
+│  AXIS 2 — PRODUCTION BUGS (revised):            │
+│  - Only fresh bugs (within 15d of sprint start) │
+│  - Re-opened sub-bugs: noted in AI, not scored  │
+│  - Spillover bugs: at least Amber + Risk flag   │
+│  - Scored by count and priority (no % volume)   │
+│  - 1 High/Critical → Red; 2+ High/Critical → Red│
+│                                                 │
+│  SPRINT BURNDOWN:                               │
+│  - Done/UAT = 1.0 credit                        │
+│  - QA / Testing = 0.6 credit (nearly done)      │
+│  - Others = 0 credit                            │
+│  - offTrackPct = elapsed% - weighted done%      │
+│                                                 │
+│  FINAL SCORE:                                   │
+│  - <span style="color: #15803d">Green</span>:  Both axes Green                      │
+│  - <span style="color: #b45309">Amber</span>:  One axis Amber                       │
+│  - <span style="color: #b91c1c">Red</span>:    Both axes Amber, or bug score Red    │
+│                                                 │
+└─────────────────────────────────────────────────┘
+</pre>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>This health score is <strong>deterministic</strong> (rule-based), not AI opinion. A <strong>ⓘ tooltip</strong> next to the health chip shows the exact numbers used — blocked %, bug score, sprint burndown — so the colour is always explainable.</div>
+                </div>
+            </section>
+
+            <!-- Weekly Project Report -->
+            <section id="weekly-report">
+                <h2>Weekly Project Report</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote
+                        style="border-left: 4px solid var(--purple); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "How did the project perform <strong>this week</strong>? What got delivered? What are ongoing
+                        risks?"
+                    </blockquote>
+                </div>
+
+                <h3 class="collapsible">How It Works</h3>
+                <div class="collapsible-content">
+                    <div class="card">
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-num">1</div>
+                                <div class="step-body">
+                                    <strong>Date Validation</strong>
+                                    <p>Start date must be a <strong>Sunday or Monday</strong>. End date must be a <strong>Friday or Saturday</strong>. Both dates must fall within the same calendar week. Duration cannot exceed 7 days. These rules prevent cross-week data mixing.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">2</div>
+                                <div class="step-body">
+                                    <strong>Cache Check</strong>
+                                    <p>If a weekly report already exists in the database for this project + week number, it is returned immediately (<code>forceRefresh: false</code>). Generation only runs when explicitly requested via the "Queue" option.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">3</div>
+                                <div class="step-body">
+                                    <strong>Gather the Week's Daily Snapshots</strong>
+                                    <p>Fetches all <code>DailyBoardSnapshot</code> records for this project within the date range. If none exist, generation is skipped (returns null — no empty reports created).</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">4</div>
+                                <div class="step-body">
+                                    <strong>Calculate 3-Week Trend Context</strong>
+                                    <p>Computes quantitative metrics for the <em>current week</em>, <em>previous week</em>, and <em>two weeks ago</em>: average active tickets, max blocked tickets, and throughput (tickets moved to Done). This context is passed to AI so it can make data-driven trend observations.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">5</div>
+                                <div class="step-body">
+                                    <strong>Analyze Blocked Tickets with Verified Durations</strong>
+                                    <p><strong>BlockedTicketAnalyzer</strong> scans 30 days of daily snapshots and calculates exact consecutive days blocked for each ticket. This data is passed directly to AI — the AI is forbidden from estimating or inventing durations.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">6</div>
+                                <div class="step-body">
+                                    <strong>Calculate Weekly Health (Majority Rule)</strong>
+                                    <p>Weekly health is derived from the daily snapshots using a <strong>majority rule</strong> — not worst-day. Strict majority (&gt; 50%) of days Red → Red. Any Red/Amber day → Amber. All Green → Green. A <code>weeklyHealthRationale</code> is stored with the day-by-day breakdown and shown as an ⓘ tooltip in the UI.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">7</div>
+                                <div class="step-body">
+                                    <strong>AI Aggregates the Week</strong>
+                                    <p>Receives: daily summaries, 3-week trend metrics, previous 2 weeks' context, lane configuration, and verified blocked ticket durations. Produces: <code>executive_summary</code> (no IDs, no praise), <code>work_summary</code>, <code>achievements</code> (no IDs), <code>risks</code>, <code>status</code>, <code>trendAnalysis</code>, <code>additional_notes</code>.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">8</div>
+                                <div class="step-body">
+                                    <strong>Validate AI Output</strong>
+                                    <p>TemporalValidator scans for suspicious phrases like "three consecutive weeks", "several weeks", "blocked for months". Logs warnings for human review.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">9</div>
+                                <div class="step-body">
+                                    <strong>Save Weekly Report</strong>
+                                    <p>Upserts into <code>project_weekly_reports</code>. Stores <code>executiveSummary</code>, <code>workSummary</code>, <code>achievements</code>, <code>risks</code>, <code>status</code>, <code>weeklyHealthRationale</code>, <code>teamMembers</code>, and raw <code>metrics</code>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>What AI Receives (Inputs)</h3>
+                <table>
+                    <tr><th>Input</th><th>Source</th><th>Purpose</th></tr>
+                    <tr><td>Daily summaries (Mon–Sat)</td><td>DailyBoardSnapshot.workSummary, risks, health</td><td>Core content for the week</td></tr>
+                    <tr><td>Current week metrics</td><td>Calculated from snapshots</td><td>Avg active tickets, max blocked, throughput</td></tr>
+                    <tr><td>Previous 2 weeks context</td><td>ProjectWeeklyReport (last 2 weeks)</td><td>Trend awareness (health, bug presence)</td></tr>
+                    <tr><td>Trend context (3 weeks)</td><td>DailyBoardSnapshot aggregation</td><td>AI can compare velocity week-over-week</td></tr>
+                    <tr><td>Blocked ticket durations</td><td>BlockedTicketAnalyzer (30-day scan)</td><td>Verified durations only — no guessing</td></tr>
+                    <tr><td>Lane configuration</td><td>Project's Jira lane setup</td><td>Prevents invalid production-throughput claims</td></tr>
+                </table>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div><strong>Verified Durations:</strong> The system provides AI with mathematically calculated durations
+                        from historical data. If a project has no "Production" lane configured, the AI is explicitly instructed not to comment on production deployment throughput.</div>
+                </div>
+            </section>
+
+            <!-- Weekly Account Report -->
+            <section id="account-report">
+                <h2>Weekly Account Report</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote
+                        style="border-left: 4px solid var(--green); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "How is the entire <strong>account</strong> doing? Which projects need attention? What should
+                        executives know?"
+                    </blockquote>
+                </div>
+
+                <h3 class="collapsible">How It Works</h3>
+                <div class="collapsible-content">
+                    <div class="card">
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-num">1</div>
+                                <div class="step-body">
+                                    <strong>Gather All Project Weekly Reports</strong>
+                                    <p>For an account like "CCMH", collects weekly reports from ALL projects (e.g., LS, LOT,
+                                        LOWA, EXP, Secondary, LOSAI).</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">2</div>
+                                <div class="step-body">
+                                    <strong>Identify High-Risk Projects</strong>
+                                    <p>Reviews each project's health status. Calculates account health: If red projects ≥
+                                        30% → Account RED; else if any red OR amber → Account AMBER; else → Account GREEN.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">3</div>
+                                <div class="step-body">
+                                    <strong>AI Synthesizes Account-Level Summary</strong>
+                                    <p>Writes executive summary for entire account, lists key accomplishments across
+                                        projects, identifies systemic risks, recommends action items. Must copy exact temporal language from project reports.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">4</div>
+                                <div class="step-body">
+                                    <strong>Validate Account Report</strong>
+                                    <p>Extra validation for executive reports: checks each risk description, verifies
+                                        durations against source project reports, flags mismatches for review.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">5</div>
+                                <div class="step-body">
+                                    <strong>Generate PowerPoint & Excel</strong>
+                                    <p>Creates executive-ready files: PPT with cover slide, executive summary, achievements,
+                                        risk matrix, health dashboard, action items. Excel with detailed metrics and trend
+                                        analysis.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-num">6</div>
+                                <div class="step-body">
+                                    <strong>Save to Database</strong>
+                                    <p>Stores complete account report with file paths to PPT/Excel deliverables.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Account Health Example</h3>
+                <pre>
+Health Summary:
+├── LS: <span style="color: #b45309">Amber</span> (2 blocked items, 2 prod bugs)
+├── LOT: <span style="color: #b91c1c">Red</span> (production defects, vendor impact)
+├── LOWA: <span style="color: #b45309">Amber</span> (velocity down 30%)
+├── EXP: <span style="color: #b45309">Amber</span> (3 blocked tickets)
+├── Secondary: <span style="color: #b45309">Amber</span> (critical bug)
+└── LOSAI: <span style="color: #b45309">Amber</span> (API blocked)
+
+Red Projects: 1 (LOT)
+Amber Projects: 5
+Green Projects: 0
+
+Calculation:
+1/6 = 16.7% red (below 30% threshold)
+But 5 amber projects exist
+→ Account Health = <span style="color: #b45309">AMBER</span>
+</pre>
+            </section>
+
+            <!-- Monthly Project Report -->
+            <section id="monthly-report">
+                <h2>Monthly Project Report</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote
+                        style="border-left: 4px solid var(--amber); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "How did the project perform over the <strong>entire month</strong>? What are the trends?"
+                    </blockquote>
+                </div>
+
+                <h3>How It Works</h3>
+                <p>Collects all weekly reports from the month (typically 4 weeks). AI aggregates to write monthly
+                    executive summary, highlight biggest achievements, identify persistent or recurring risks, and assess
+                    overall monthly health.</p>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Temporal Accuracy:</strong> The system tracks when risks occur across weeks rather than
+                        adding up durations. For example: "Blocker appeared in weeks 1 and 3" rather than misleading
+                        statements like "blocked for 4 days total".</div>
+                </div>
+            </section>
+
+            <!-- Shared Team Reports -->
+            <section id="shared-team">
+                <h2>Shared Team Reports</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote style="border-left: 4px solid var(--purple); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "What did our shared / cross-functional team members accomplish across <strong>all the projects</strong> they worked on today?"
+                    </blockquote>
+                </div>
+
+                <p>Some developers work across multiple projects simultaneously. A standard daily report only covers one project at a time. The Shared Team Report consolidates activity for a named group of people across every project they touched.</p>
+
+                <h3>How It Works</h3>
+                <div class="card">
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-body">
+                                <strong>Identify Team Members</strong>
+                                <p>A shared team is defined by a list of member names. The system locates each member's activity across all project daily snapshots for the target date.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-body">
+                                <strong>Aggregate Project Reports</strong>
+                                <p>Collects the relevant sections (work summary, risks, plan) from each project's daily report where these members had activity. Combines them into one aggregated text block.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-body">
+                                <strong>AI Consolidates the View</strong>
+                                <p>Claude receives the aggregated project reports and member list. It synthesises a single coherent daily summary: what the shared team accomplished across all projects, any cross-project risks, and a unified plan for tomorrow. Groups by project or theme, whichever is clearer.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-body">
+                                <strong>Same Output Format as Daily Report</strong>
+                                <p>Returns <code>health</code>, <code>executiveSummary</code>, <code>keyRisks</code>, <code>executivePlan</code>, <code>planForTomorrow</code>, <code>risks</code>, <code>notes</code>, and <code>workSummary</code> — identical structure to a standard daily report.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Anti-Hallucination:</strong> AI is instructed not to mention tickets or work that were not in the aggregated reports, and to ignore "No activity" entries unless they are the only source available.</div>
+                </div>
+            </section>
+
+            <!-- Team Performance -->
+            <section id="team-performance">
+                <h2>Team Performance Analytics</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">What It Answers</h3>
+                    <blockquote style="border-left: 4px solid var(--primary); padding-left: 16px; margin: 0; font-style: italic; color: var(--text-muted);">
+                        "How is each developer delivering across sprints? Who is consistently hitting their commitments? How is velocity trending over time?"
+                    </blockquote>
+                </div>
+
+                <p>The Team Performance module provides on-demand sprint-level and historical delivery metrics per developer. It is separate from the automated daily/weekly pipeline — you select the project, sprint(s), and team members manually to generate a snapshot.</p>
+
+                <h3>Tab 0 — Sprint Report</h3>
+                <p>Select a closed or active sprint and one or more team members to generate a per-sprint breakdown:</p>
+                <table>
+                    <tr><th>Section</th><th>What it shows</th></tr>
+                    <tr>
+                        <td><strong>Summary cards</strong></td>
+                        <td>Total SP planned, SP done, overall delivery %, total spillover count</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sprint progress bar</strong></td>
+                        <td>Percentage of the sprint window elapsed vs. work completed — useful for mid-sprint checks</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Member table</strong></td>
+                        <td>Per-developer: SP planned / SP done / delivery % / pipeline breakdown chips (In Progress, QA, UAT, Done)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Late QA movers</strong></td>
+                        <td>Tickets that moved into QA after the sprint midpoint — potential at-risk items for sprint closure</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scope changes</strong></td>
+                        <td>Tickets added or removed after the sprint start date</td>
+                    </tr>
+                </table>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div><strong>Delivery % definition:</strong> Story points in Done + UAT + QA statuses ÷ total story points assigned. Tickets at UAT count as V2-team-complete — development work is done, only customer/PO sign-off remains.</div>
+                </div>
+
+                <h3>Tab 1 — Team History (Scrum Projects)</h3>
+                <p>Shows a developer-card grid covering the last 3 closed sprints plus the current active sprint per member:</p>
+                <ul>
+                    <li><strong>Bar chart per card:</strong> Planned SP vs. Done SP side-by-side for each closed sprint. Bars are colour-coded green (&gt;=80%), amber (50–79%), or red (&lt;50%) by delivery %.</li>
+                    <li><strong>Tooltip:</strong> Hovering a bar shows the full sprint name and delivery percentage.</li>
+                    <li><strong>Current sprint tile:</strong> SP done / SP planned so far, delivery %, and live pipeline breakdown (In Progress, QA, UAT, Done counts).</li>
+                </ul>
+
+                <h3>Tab 1 — Team History (Kanban Projects)</h3>
+                <p>Kanban projects have no sprints, so Team History shows a custom date-range velocity view instead:</p>
+                <table>
+                    <tr><th>Control</th><th>What it does</th></tr>
+                    <tr>
+                        <td><strong>Start date / End date</strong></td>
+                        <td>Define the overall analysis window (default: last 90 days)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Period slice (days)</strong></td>
+                        <td>Break the window into equal N-day periods (e.g. 15 days → six 15-day buckets from a 90-day range)</td>
+                    </tr>
+                </table>
+                <p>Each developer card shows:</p>
+                <ul>
+                    <li><strong>Bar chart:</strong> Number of tickets delivered (moved to Done) per period</li>
+                    <li><strong>Average velocity:</strong> Avg tickets per period and avg story points per period across all slices</li>
+                    <li><strong>Current open tickets:</strong> Live breakdown of work in flight — In Progress, QA, UAT, Done counts</li>
+                </ul>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div>Kanban history is calculated from Jira's "statusCategory changed to Done DURING (start, end)" JQL — one query per period slice. This gives accurate delivery counts even if tickets were later reopened or moved back.</div>
+                </div>
+
+                <h3>UAT in Delivery Metrics</h3>
+                <p>UAT (User Acceptance Testing) receives special treatment in all Team Performance calculations:</p>
+                <table>
+                    <tr><th>Situation</th><th>How it's reported</th></tr>
+                    <tr>
+                        <td>Ticket at UAT, assignee is the customer or PO</td>
+                        <td>Counted as V2-team-complete. Development work is done; not flagged as a risk against the team.</td>
+                    </tr>
+                    <tr>
+                        <td>Many tickets at UAT near sprint end date</td>
+                        <td>AI may include one brief sentence noting sprint formal closure depends on customer/PO sign-off — framed as a schedule dependency, not a team shortcoming.</td>
+                    </tr>
+                    <tr>
+                        <td>UAT ticket assigned to a V2 team member</td>
+                        <td>Flagged as a minor concern since UAT is normally customer responsibility. Proportional — not used to change health rating.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Executive Summaries -->
+            <section id="exec-summaries">
+                <h2>Executive-Ready Summaries</h2>
+                <p>All AI-generated executive summaries are written for senior leadership and CEOs who have <strong>no access to Jira</strong>. Ticket IDs and raw ticket titles are meaningless to this audience — so the AI is explicitly instructed to describe work in functional and business themes only.</p>
+
+                <div class="callout warning">
+                    <div class="callout-icon">🚫</div>
+                    <div>
+                        <strong>Ticket ID ban</strong> — Jira ticket IDs are never permitted in: Executive Summary,
+                        Key Risks, or Plan for Tomorrow / Executive Plan. IDs are only allowed in Work Summary and the
+                        Ticket-Level Details section.<br><br>
+                        <strong>Praise-free rule</strong> — Generic morale statements are forbidden across all executive
+                        fields: "excellent progress", "outstanding results", "strong velocity", "commendable effort".
+                        Every sentence must name a specific feature, module, or factual delivery outcome.
+                    </div>
+                </div>
+
+                <h3>Before vs. After</h3>
+                <table>
+                    <tr>
+                        <th>❌ Rejected</th>
+                        <th>✅ Accepted</th>
+                    </tr>
+                    <tr>
+                        <td>"LOSAI-6066 deployment moved to Testing. LOSAI-6074 advanced to UAT."</td>
+                        <td>"Payment integration features advanced through QA into UAT, with one component awaiting business sign-off."</td>
+                    </tr>
+                    <tr>
+                        <td>"SC-1180 and SC-1181 completed and merged to main."</td>
+                        <td>"Authentication and session management improvements were completed and merged."</td>
+                    </tr>
+                    <tr>
+                        <td>"The team made excellent progress and delivered outstanding results this week."</td>
+                        <td>"Loan origination module completed UAT; bulk upload feature passed QA and is pending deployment sign-off."</td>
+                    </tr>
+                    <tr>
+                        <td>"Key Risk: LP-204 is blocked." (in keyRisks)</td>
+                        <td>"Bulk export feature is blocked pending third-party API credentials from the external vendor."</td>
+                    </tr>
+                </table>
+
+                <h3>Where Ticket IDs <em>Are</em> Allowed</h3>
+                <p>Ticket IDs are permitted — and required — in the <strong>Ticket-Level Details</strong> section of
+                    daily reports. This is a separate collapsed accordion for operational traceability, distinct from
+                    the executive fields above it.</p>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>These rules apply at all report levels: daily, weekly project, and account weekly. The Ticket-Level Details section (daily DSR only) is the designated place for Jira ID traceability.</div>
+                </div>
+            </section>
+
+            <!-- Manager Insights -->
+            <section id="manager-insights">
+                <h2>Manager Insights</h2>
+                <p>A layered annotation system lets team leads and managers add human context that Jira data alone cannot capture — escalations, customer concerns, verbal feedback, decisions made in stand-ups.</p>
+
+                <h3>The Insight Cascade</h3>
+                <pre style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:20px; font-size:13px; line-height:1.8;">
+Daily Status Reports  ←  Team lead enters free text (no AI)
+       ↓ AI collates Mon–Fri daily insights during WSR generation
+Weekly Project Reports  ←  AI-generated summary of daily insights (editable)
+                            Baked into executive_summary at generation time
+       ↓ AI collates all project insights during Account WSR generation
+Account Weekly Reports  ←  AI-generated account-level narrative (editable)
+                            Baked into account summary at generation time</pre>
+
+                <h3>Behavior by Level</h3>
+                <table>
+                    <tr>
+                        <th>Level</th>
+                        <th>Who Sets It</th>
+                        <th>AI Method</th>
+                        <th>Effect on Summary</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Daily</strong></td>
+                        <td>Team lead types directly</td>
+                        <td>None — pure human input</td>
+                        <td>Stored for WSR collation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weekly Project</strong></td>
+                        <td>Auto-collated from daily insights</td>
+                        <td><code>collateWeeklyInsights()</code></td>
+                        <td>Woven into <code>executive_summary</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Account Weekly</strong></td>
+                        <td>Auto-collated from project insights</td>
+                        <td><code>collateAccountInsights()</code></td>
+                        <td>Woven into account <code>summary</code></td>
+                    </tr>
+                </table>
+
+                <div class="callout tip">
+                    <div class="callout-icon">💡</div>
+                    <div><strong>Post-generation edits</strong> trigger a <strong>Preview → Accept</strong> flow. The manager sees a side-by-side diff of the current executive summary versus a proposed version that incorporates their updated insights. They must explicitly accept before any change is saved.</div>
+                </div>
+
+                <h3>API Endpoints</h3>
+                <table>
+                    <tr>
+                        <th>Method</th>
+                        <th>Endpoint</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>PATCH</code></td>
+                        <td><code>/api/report/daily/:id/insights</code></td>
+                        <td>Save daily manager insights — no AI</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST</code></td>
+                        <td><code>/api/report/:reportType/:id/insights/preview</code></td>
+                        <td>Preview refreshed executive summary (returns old + new)</td>
+                    </tr>
+                    <tr>
+                        <td><code>PATCH</code></td>
+                        <td><code>/api/report/:reportType/:id/insights/accept</code></td>
+                        <td>Accept and persist insights + new summary</td>
+                    </tr>
+                </table>
+                <p style="font-size:13px; color:var(--text-muted);">Where <code>:reportType</code> is <code>daily</code>, <code>weekly_project</code>, or <code>weekly_account</code>.</p>
+            </section>
+
+            <!-- AI Engine -->
+            <section id="ai-engine">
+                <h2>AI Engine — Claude Sonnet</h2>
+
+                <div class="card">
+                    <h3 style="margin-top:0">Model &amp; Settings</h3>
+                    <table>
+                        <tr><th>Setting</th><th>Value</th><th>Why</th></tr>
+                        <tr><td>Model</td><td><code>claude-sonnet-4-5-20250929</code></td><td>High quality, fast, cost-effective for structured JSON output</td></tr>
+                        <tr><td>Temperature</td><td><code>0.2</code></td><td>Low randomness — factual, consistent outputs</td></tr>
+                        <tr><td>Max tokens (daily)</td><td><code>8192</code></td><td>Supports detailed ticket-level summaries</td></tr>
+                        <tr><td>Max tokens (weekly / account / monthly)</td><td><code>4096</code></td><td>Sufficient for executive summaries</td></tr>
+                        <tr><td>Output format</td><td>Raw JSON (no markdown wrapping)</td><td>Parsed directly, no post-processing needed</td></tr>
+                    </table>
+                </div>
+
+                <h3>AI Methods</h3>
+                <p>The <code>AIService</code> class has seven distinct methods — four generation methods and three insight collation methods:</p>
+
+                <div class="defense-layers">
+                    <div class="layer">
+                        <div class="layer-title">1 · analyzeBoard() — Daily Report</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> Active tickets (with daily activity), context/backlog tickets (up to 50), blocked tickets with last comment, stale tickets (&gt;3 days in progress), previous day's snapshot, weekend activity highlights, lane configuration, pre-calculated health + rationale.<br><br>
+                            <strong>Outputs:</strong> <code>health</code>, <code>executiveSummary</code>, <code>keyRisks</code>, <code>executivePlan</code>, <code>planForTomorrow</code>, <code>risks</code>, <code>notes</code>, <code>workSummary</code>.<br><br>
+                            <strong>Key rules:</strong> AI cannot lower the pre-calculated health score (may only escalate to Red for P0 production outages). No percentage symbols in <code>executiveSummary</code>. No invented time durations. Only active tickets are described as having work done today.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">2 · generateWeeklySummary() — Weekly Report</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> Daily summaries for the week, previous 2 weeks' context (health + bugs), 3-week quantitative trend (avg active, max blocked, throughput), verified blocked ticket durations (from BlockedTicketAnalyzer), lane configuration.<br><br>
+                            <strong>Outputs:</strong> <code>executive_summary</code> (two paragraphs: achievements then risks), <code>work_summary</code>, <code>achievements</code>, <code>risks</code>, <code>status</code>, <code>trendAnalysis</code>, <code>additional_notes</code>.<br><br>
+                            <strong>Key rules:</strong> Blocked ticket durations must come verbatim from the verified data (format: "Ticket X blocked for 2 days (since 2026-02-20)"). If no Production lane is configured, AI must not comment on production deployment throughput. Sparse data → Green status, not Red/Amber.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">3 · generateAccountSummary() — Account Weekly Report</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> All project weekly summaries (name, summary, risks, status, high-severity-bug flag). Health is pre-calculated deterministically: ≥30% red projects → Account Red; any red or amber → Account Amber; else Green. Threshold is 30% by default.<br><br>
+                            <strong>Outputs:</strong> <code>summary</code>, <code>key_accomplishments[]</code>, <code>risks{summary, items[]}</code>, <code>action_items[]</code>, <code>red_projects[]</code>, <code>recommendations</code>, <code>health</code>, <code>notes</code>.<br><br>
+                            <strong>Key rules:</strong> No Jira ticket keys in output. Projects with <code>Unknown</code> status are ignored — they do not contribute to health or risk narrative (absence of data is NOT a health indicator). Exact temporal language must be copied from project reports, never extrapolated.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">4 · generateMonthlySummary() — Monthly Report</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> All weekly report summaries for the month (week number, work_summary, achievements, risks, status).<br><br>
+                            <strong>Outputs:</strong> <code>work_summary</code>, <code>achievements</code>, <code>risks</code>, <code>status</code>.<br><br>
+                            <strong>Key rules:</strong> Blocked ticket durations must not be aggregated. If a ticket was blocked in week 1 and week 3, the output should say "recurring blocker in weeks 1 and 3" — NOT "blocked for 3 weeks total". Only patterns explicitly documented across multiple weeks may be called recurring.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">5 · collateWeeklyInsights() — Manager Insights Collation</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> Array of daily manager insight strings for the week, project name.<br><br>
+                            <strong>Outputs:</strong> A concise 2–4 sentence narrative summarising the human context themes across the week.<br><br>
+                            <strong>When called:</strong> Automatically during <code>generateWeeklyReport()</code> if any daily snapshots have <code>managerInsights</code> set. The result is passed to <code>generateWeeklySummary()</code> and stored in <code>ProjectWeeklyReport.managerInsights</code>.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">6 · collateAccountInsights() — Account Insights Collation</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> Array of <code>{ projectName, insights }</code> objects for each project that has weekly manager insights.<br><br>
+                            <strong>Outputs:</strong> An account-level narrative that synthesises cross-project themes.<br><br>
+                            <strong>When called:</strong> Automatically during account WSR generation if any project weekly reports have <code>managerInsights</code>. The result is passed to <code>generateAccountSummary()</code> and stored in <code>AccountWeeklyReport.managerInsights</code>.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">7 · refreshExecutiveSummary() — Post-Edit Refresh</div>
+                        <div class="layer-desc">
+                            <strong>Inputs:</strong> Report type, project/account name, stored work summary, health, existing risks, and updated manager insights.<br><br>
+                            <strong>Outputs:</strong> A refreshed executive summary string incorporating the new insights.<br><br>
+                            <strong>When called:</strong> On the <code>POST /insights/preview</code> endpoint when a manager edits insights after a report has already been generated. Returns both the old and new summary so the UI can show a diff. The update is only committed when the manager hits <strong>Accept</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <h3>JSON Parsing &amp; Repair</h3>
+                <p>AI responses are parsed as raw JSON. If parsing fails (e.g. truncated response), the system attempts repair heuristics in sequence: append <code>"}</code>, <code>"}</code>, etc. If all repairs fail, a fallback error object is returned and the raw response is written to <code>error_analysis.log</code> for debugging. This means reports always return a valid structure even when the AI model has issues.</p>
+            </section>
+
+            <!-- Quality Assurance -->
+            <section id="quality-assurance">
+                <h2>Quality Assurance System</h2>
+
+                <h3>The 4-Layer Defense System</h3>
+                <p>To ensure accuracy and prevent AI from inventing facts, the system uses multiple layers of verification:</p>
+
+                <div class="defense-layers">
+                    <div class="layer">
+                        <div class="layer-title">Layer 1: Historical Data Analysis</div>
+                        <div class="layer-desc">
+                            <strong>BlockedTicketAnalyzer</strong> scans 30 days of reports and calculates exact blocked
+                            durations mathematically. Example output: "LS-1844: 2 days (since Feb 20)" based on actual
+                            historical data, not estimates.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">Layer 2: Strict AI Instructions</div>
+                        <div class="layer-desc">
+                            AI receives explicit rules: "Use ONLY verified durations. NEVER say 'three weeks' unless it's
+                            in the data. FORBIDDEN phrases: 'several weeks', 'consecutive weeks'". This constrains the AI
+                            to factual statements only.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">Layer 3: Post-Processing Validation</div>
+                        <div class="layer-desc">
+                            <strong>TemporalValidator</strong> scans AI output for suspicious phrases like "three
+                            consecutive weeks" or vague terms like "several weeks". When detected, warnings are logged for
+                            human review.
+                        </div>
+                    </div>
+
+                    <div class="layer">
+                        <div class="layer-title">Layer 4: Monitoring & Alerts</div>
+                        <div class="layer-desc">
+                            DevOps team monitors application logs for validation warnings, reviews flagged reports,
+                            regenerates if needed, and continuously improves AI prompts based on observed patterns.
+                        </div>
+                    </div>
+                </div>
+
+                <h3>How This Protects Report Accuracy</h3>
+                <table>
+                    <tr>
+                        <th>Without Validation</th>
+                        <th>With 4-Layer Defense</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge-red">❌ RISK</span><br>
+                            AI might say: "Blocked for three consecutive weeks"<br>
+                            <small style="color: var(--text-muted);">Even when actual data shows only 2 days</small>
+                        </td>
+                        <td>
+                            <span class="badge-green">✅ ACCURATE</span><br>
+                            System enforces: "LS-1844, LS-1755 blocked for 2 days (since Feb 20)"<br>
+                            <small style="color: var(--text-muted);">Mathematically verified from historical data</small>
+                        </td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Complete System Flow -->
+            <section id="complete-flow">
+                <h2>Complete System Flow Diagram</h2>
+                <pre style="font-size: 12px;">
+┌───────────────────────────────────────────────────────────────────────────┐
+│                        COMPLETE REPORTING PIPELINE                         │
+└───────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────┐
+                              │  JIRA   │
+                              │ BOARDS  │
+                              └────┬────┘
+                                   │
+                                   ↓
+            ┌──────────────────────────────────────────┐
+            │      DAILY STATUS REPORT (Per Project)    │
+            │          [ReportService.processBoard()]   │
+            ├──────────────────────────────────────────┤
+            │ 1. Fetch tickets from Jira               │
+            │ 2. Filter by registered team members     │
+            │ 3. Identify 24-hour window activity       │
+            │ 4. Calculate health (rule-based)         │
+            │ 5. AI writes summary (analyzeBoard)      │
+            │ 6. <span style="color: #15803d">✓ Validate: TemporalValidator scan</span>     │
+            │ 7. Upsert DailyBoardSnapshot to DB       │
+            └──────────────────┬───────────────────────┘
+                               │
+              ┌────────────────┤
+              │                │ (Shared team: cross-project members)
+              │                ↓
+              │   ┌──────────────────────────────┐
+              │   │   SHARED TEAM REPORT          │
+              │   │ [AIService.consolidate...]    │
+              │   │ Aggregates member activity    │
+              │   │ across all their projects     │
+              │   └──────────────────────────────┘
+              │
+              │  (Collect 5-7 daily reports per project)
+              ↓
+            ┌──────────────────────────────────────────┐
+            │    WEEKLY PROJECT REPORT (Per Project)    │
+            │    [ReportService.generateWeeklyReport()] │
+            ├──────────────────────────────────────────┤
+            │ 1. Validate dates (Sun/Mon → Fri/Sat)    │
+            │ 2. Check cache (return if exists)        │
+            │ 3. Fetch daily snapshots for week        │
+            │ 4. Calculate 3-week trend metrics        │
+            │ 5. <span style="color: #15803d">✓ BlockedTicketAnalyzer (30-day scan)</span> │
+            │ 6. AI aggregates (generateWeeklySummary) │
+            │ 7. <span style="color: #15803d">✓ Validate: Scan for invented durations</span>│
+            │ 8. Upsert ProjectWeeklyReport to DB      │
+            └──────────────────┬───────────────────────┘
+                               │
+                   ┌───────────┴───────────┐
+                   │                       │
+        (All projects in account)  (All weeks in month)
+                   │                       │
+                   ↓                       ↓
+   ┌───────────────────────────┐  ┌────────────────────────────┐
+   │  WEEKLY ACCOUNT REPORT    │  │  MONTHLY PROJECT REPORT    │
+   │  [AccountReportService]   │  │  [MonthlyReportService]    │
+   ├───────────────────────────┤  ├────────────────────────────┤
+   │ 1. Gather project reports │  │ 1. Fetch month's weekly    │
+   │ 2. Deterministic health   │  │    reports (by start_date) │
+   │    (≥30% Red → Acct Red)  │  │ 2. AI aggregates monthly   │
+   │ 3. AI synthesizes summary │  │    (generateMonthlySummary)│
+   │ 4. <span style="color: #15803d">✓ Validate against sources</span> │  │ 3. <span style="color: #15803d">✓ Validate: no cumulative</span>  │
+   │ 5. Generate PPT + Excel   │  │    <span style="color: #15803d">duration guesses</span>         │
+   │ 6. Save + file paths to DB│  │ 4. Save to DB              │
+   └───────────────────────────┘  └────────────────────────────┘
+                   │
+                   ↓
+   ┌───────────────────────────┐
+   │   EXECUTIVE DELIVERABLES  │
+   ├───────────────────────────┤
+   │ • PowerPoint Presentation │
+   │ • Excel Spreadsheet       │
+   │ • Web Dashboard View      │
+   └───────────────────────────┘
+</pre>
+            </section>
+
+            <!-- For Managers -->
+            <section id="for-managers">
+                <h2>For Managers: What This Means for You</h2>
+
+                <h3>✅ What You Can Trust</h3>
+                <div class="card">
+                    <p><strong>Green/Amber/Red Health Scores:</strong></p>
+                    <ul>
+                        <li>Based on mathematical rules</li>
+                        <li>Counts actual blocked tickets and bugs</li>
+                        <li>Not AI opinion - it's calculated</li>
+                    </ul>
+
+                    <p style="margin-top: 16px;"><strong>Metrics (Numbers):</strong></p>
+                    <ul>
+                        <li>Average active tickets</li>
+                        <li>Throughput (completed work)</li>
+                        <li>Team member counts</li>
+                        <li>All calculated from real data</li>
+                    </ul>
+
+                    <p style="margin-top: 16px;"><strong>Temporal Claims:</strong></p>
+                    <ul>
+                        <li><span class="badge-green">✅</span> "Blocked for 2 days (since Feb 20)" ← Fact-checked</li>
+                        <li><span class="badge-green">✅</span> "Currently blocked" ← Safe statement</li>
+                        <li><span class="badge-green">✅</span> "Stale (>3 days)" ← Rule-based threshold</li>
+                    </ul>
+
+                    <p style="margin-top: 16px;"><strong>Health Explainability (new):</strong></p>
+                    <ul>
+                        <li>Hover the <strong>ⓘ icon</strong> next to any daily health chip → exact numbers: blocked %, bug score, sprint burndown</li>
+                        <li>Hover the <strong>ⓘ icon</strong> next to any weekly health chip → day-by-day breakdown + majority rule applied</li>
+                        <li>No more "why is this Amber?" — the reasoning is always one hover away</li>
+                    </ul>
+
+                    <p style="margin-top: 16px;"><strong>Ticket-Level Details (new, daily DSR):</strong></p>
+                    <ul>
+                        <li>Open any daily DSR → expand the <strong>Ticket-Level Details</strong> accordion (collapsed by default)</li>
+                        <li>Shows one line per active ticket: ID, issue type, what was done that day, current status</li>
+                        <li>This is the only place Jira IDs appear — all executive fields are always ID-free</li>
+                    </ul>
+                </div>
+
+                <h3>⚠️ What to Verify</h3>
+                <div class="card">
+                    <p><strong>Qualitative Statements:</strong></p>
+                    <ul>
+                        <li>"Potential quality issues" ← AI interpretation</li>
+                        <li>"Suggests systemic gaps" ← AI inference</li>
+                        <li>These are helpful but should be investigated</li>
+                    </ul>
+
+                    <p style="margin-top: 16px;"><strong>If You See Warning Flags:</strong></p>
+                    <ul>
+                        <li>Check application logs</li>
+                        <li>Regenerate the report</li>
+                        <li>Compare with source data</li>
+                    </ul>
+                </div>
+
+                <h3>📝 Adding Manager Insights</h3>
+                <div class="card">
+                    <p>Each report has a <strong>Manager Insights</strong> card below the Executive Summary. Use it to add context that Jira cannot capture:</p>
+                    <ul>
+                        <li>Escalations from customers or stakeholders</li>
+                        <li>Verbal feedback from leadership or stand-ups</li>
+                        <li>Decisions made outside the ticketing system</li>
+                        <li>Context about why work slowed or accelerated</li>
+                    </ul>
+                    <p style="margin-top:12px;">Daily insights are saved immediately with no AI involvement. For weekly and account reports, clicking <strong>Refresh Summary</strong> after editing insights shows a side-by-side preview before you commit the change.</p>
+                </div>
+
+                <h3>📊 How to Use Reports</h3>
+                <div class="pills">
+                    <div class="pill">📅 Daily Reports</div>
+                    <div class="pill">📆 Weekly Project</div>
+                    <div class="pill">🏢 Weekly Account</div>
+                    <div class="pill">📊 Monthly</div>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>Report Type</th>
+                        <th>Best For</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Daily Reports</strong></td>
+                        <td>Quick pulse check, see what happened yesterday, identify immediate blockers. Add daily manager insights here.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weekly Project Reports</strong></td>
+                        <td>Understand project trajectory, review achievements and risks, make tactical decisions. Insights are auto-collated from daily entries.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weekly Account Reports</strong></td>
+                        <td>Executive overview, cross-project patterns, strategic planning. Insights are auto-collated from all project weekly insights.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monthly Reports</strong></td>
+                        <td>Trend analysis, performance review, long-term planning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shared Team Reports</strong></td>
+                        <td>Visibility into developers working across multiple projects — consolidated daily view per person</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Team Performance</strong></td>
+                        <td>On-demand sprint delivery analysis per developer: delivery %, pipeline breakdown, late QA movers, scope changes, and multi-sprint velocity trends (bar charts). Kanban projects support custom date-range velocity with configurable period slicing.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Glossary -->
+            <section id="glossary">
+                <h2>Glossary for Non-Technical Readers</h2>
+
+                <div class="glossary-grid">
+                    <div class="glossary-item">
+                        <div class="glossary-term">Jira</div>
+                        <div class="glossary-def">Project management software where teams track their work tickets</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Ticket</div>
+                        <div class="glossary-def">A single work item (bug fix, feature, task) in Jira</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Blocked</div>
+                        <div class="glossary-def">A ticket that can't proceed because it's waiting for something
+                            (approval, other team, etc.)</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Stale</div>
+                        <div class="glossary-def">A ticket that's been "In Progress" but hasn't had any updates for 3+
+                            days</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Throughput</div>
+                        <div class="glossary-def">Number of tickets completed in a time period (higher = more productive)
+                        </div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Health Score</div>
+                        <div class="glossary-def">Green/Amber/Red indicator of project status based on rules</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">AI (Claude)</div>
+                        <div class="glossary-def">The artificial intelligence that writes the human-readable summaries
+                        </div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Hallucination</div>
+                        <div class="glossary-def">When AI invents information that isn't true (like "3 weeks" instead of
+                            "2 days")</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Validation</div>
+                        <div class="glossary-def">Automated checking to catch AI mistakes before reports are saved</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Deterministic</div>
+                        <div class="glossary-def">Based on rules and math, not guesses (reliable, repeatable)</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">BlockedTicketAnalyzer</div>
+                        <div class="glossary-def">Tool that mathematically calculates exact blocked durations from
+                            historical data</div>
+                    </div>
+
+                    <div class="glossary-item">
+                        <div class="glossary-term">Lane Configuration</div>
+                        <div class="glossary-def">Board column groupings defined per project (e.g., "In Progress", "Blocked"). Determines which Jira statuses are considered active, done, or blocked for health scoring.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Shared Team Report</div>
+                        <div class="glossary-def">A special daily report for developers who contribute to multiple projects. The AI consolidates work from all projects into one unified summary for that developer.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Cache / forceRefresh</div>
+                        <div class="glossary-def">Reports are saved to the database after first generation. Subsequent requests return the cached version instantly. The "Queue your request" / forceRefresh option bypasses the cache to regenerate from current data.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Trend Context (3-week)</div>
+                        <div class="glossary-def">When generating a weekly report, the system also fetches the previous two weeks' metrics (avg tickets, throughput, blocked counts) and passes them to the AI so it can identify improving or worsening patterns.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">TemporalValidator</div>
+                        <div class="glossary-def">Tool that scans AI output for invented time durations and flags
+                            suspicious claims</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Team Performance</div>
+                        <div class="glossary-def">On-demand analytics module showing per-developer sprint delivery metrics, multi-sprint velocity bar charts, pipeline breakdown, and Kanban date-range history with period slicing.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Story Points (SP)</div>
+                        <div class="glossary-def">Effort estimation units assigned to Jira tickets. Team Performance uses SP Planned vs SP Done to measure delivery percentage per sprint.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Delivery %</div>
+                        <div class="glossary-def">Story points in Done + UAT + QA ÷ total story points assigned. UAT tickets count as V2-team-complete since development is finished.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Spillover</div>
+                        <div class="glossary-def">Tickets that were in the sprint at start but did not reach Done by sprint end — they carry over to the next sprint.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Period Slice</div>
+                        <div class="glossary-def">In Kanban Team History, the date range is divided into equal N-day windows (e.g. 15-day slices). Each slice shows how many tickets each developer delivered in that window.</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer>
+        DSR Generator &nbsp;·&nbsp; Internal Team Guide &nbsp;·&nbsp; Last updated March 2026 (UAT exclusion, QA partial credit, WSR majority rule, health rationale ⓘ, ticket-level details)
+        <br>
+        <small style="opacity: 0.7; margin-top: 8px; display: block;">Questions? Contact the development team or check
+            application logs for validation warnings.</small>
+    </footer>
+
+    <script>
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Highlight active nav link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible').forEach(header => {
+            header.addEventListener('click', function () {
+                this.classList.toggle('collapsed');
+                const content = this.nextElementSibling;
+                if (content && content.classList.contains('collapsible-content')) {
+                    content.classList.toggle('hidden');
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

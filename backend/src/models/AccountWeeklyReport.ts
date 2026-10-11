@@ -1,0 +1,154 @@
+import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Account } from './Account';
+
+@Table({
+    tableName: 'account_weekly_reports',
+    timestamps: true,
+    underscored: true
+})
+export class AccountWeeklyReport extends Model {
+    @Column({
+        primaryKey: true,
+        autoIncrement: true,
+        type: DataType.INTEGER
+    })
+    id!: number;
+
+    @ForeignKey(() => Account)
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: false,
+        field: 'account_id'
+    })
+    accountId!: number;
+
+    @BelongsTo(() => Account)
+    account!: Account;
+
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: false,
+        field: 'week_number'
+    })
+    weekNumber!: number;
+
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: false
+    })
+    year!: number;
+
+    @Column({
+        type: DataType.DATEONLY,
+        allowNull: false,
+        field: 'start_date'
+    })
+    startDate!: string;
+
+    @Column({
+        type: DataType.DATEONLY,
+        allowNull: false,
+        field: 'end_date'
+    })
+    endDate!: string;
+
+    @Column({
+        type: DataType.TEXT,
+        allowNull: true
+    })
+    summary!: string;
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+        defaultValue: { summary: '', items: [] }
+    })
+    risks!: { summary: string; items: string[] };
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
+    })
+    health!: string;
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+        field: 'key_accomplishments'
+    })
+    keyAccomplishments!: string[];
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+        field: 'red_projects'
+    })
+    redProjects!: string[];
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+        defaultValue: [],
+        field: 'projects_included'
+    })
+    projectsIncluded!: string[];
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+        defaultValue: [],
+        field: 'projects_missing'
+    })
+    projectsMissing!: string[];
+
+    @Column({
+        type: DataType.JSONB,
+        defaultValue: [],
+        field: 'action_items'
+    })
+    actionItems!: string[];
+
+    @Column({
+        type: DataType.TEXT,
+        allowNull: true,
+        field: 'file_path'
+    })
+    filePath!: string;
+
+    @Column({
+        type: DataType.TEXT,
+        allowNull: true,
+        field: 'manager_insights'
+    })
+    managerInsights?: string;
+
+    @Column({ type: DataType.INTEGER, allowNull: true, field: 'insights_author_id' })
+    insightsAuthorId?: number;
+
+    @Column({ type: DataType.STRING(200), allowNull: true, field: 'insights_author_name' })
+    insightsAuthorName?: string;
+
+    @Column({ type: DataType.JSONB, allowNull: true, field: 'team_notes' })
+    teamNotes?: Array<{ userId: number; name: string; text: string; timestamp: string }>;
+
+    @Column({
+        type: DataType.TEXT,
+        allowNull: true,
+        field: 'original_executive_summary'
+    })
+    originalExecutiveSummary?: string;
+
+    @Column({
+        type: DataType.DATE,
+        defaultValue: DataType.NOW,
+        field: 'created_at'
+    })
+    createdAt!: Date;
+
+    @Column({
+        type: DataType.DATE,
+        defaultValue: DataType.NOW,
+        field: 'updated_at'
+    })
+    updatedAt!: Date;
+}

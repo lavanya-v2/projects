@@ -1,0 +1,24 @@
+{
+  "lensBaseUrl": "https://lens.your-company.internal",
+  "ingestToken": "clct_paste_your_token_from_lens_here",
+  "enabled": true,
+
+  "_comment_claudeConfigDir": "Optional. Point at a specific Claude config dir to isolate the customer license from a personal account (CLAUDE_CONFIG_DIR setups). Default: ~/.claude",
+  "claudeConfigDir": null,
+
+  "_comment_expectedOrgUuid": "Optional local guard. If set, the collector only pushes when the current Claude org matches this uuid.",
+  "expectedOrgUuid": null,
+
+  "_comment_vpn": "VPN gate. While a VPN is detected the collector sends NOTHING (not even a DNS lookup) — the day is queued locally and sent on the next run off VPN. Run 'node vpn.js' to see the current verdict.",
+
+  "_comment_skipOnVpn": "Master switch for the VPN gate. Turning this off means reports may be sent from inside a customer network. Do not set it to false without a decision to that effect.",
+  "skipOnVpn": true,
+
+  "_comment_treatProxyAsVpn": "A machine-wide proxy is treated as a VPN, because it means traffic leaves through something we cannot account for. Set false only if our OWN network uses a proxy and this is suppressing reports everywhere.",
+  "treatProxyAsVpn": true,
+
+  "_comment_vpnAllowInterfaces": "macOS/Linux only. Exact network interface names to ignore when looking for tunnels, for a reviewed exception. Every name added here is a way for reports to leave over that interface.",
+  "vpnAllowInterfaces": [],
+
+  "_comment_vpnUnverified": "If a VPN check cannot be run at all (blocked by policy), the collector now sends anyway, marked 'unverified' in the audit trail — it no longer stays silent forever with no way to notice. There is no setting for this; it is the default behavior."
+}

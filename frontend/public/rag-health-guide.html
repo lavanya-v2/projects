@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSR Health Status (RAG) Guide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 32px 24px; }
+  .container { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card h3 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; color: #334155; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #fff; }
+  .badge-green { background: #16a34a; }
+  .badge-amber { background: #f59e0b; }
+  .badge-red { background: #dc2626; }
+  .badge-blue { background: #2563eb; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: stretch; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+  .flow-box { flex: 1; min-width: 160px; background: #f1f5f9; border-radius: 10px; padding: 14px; text-align: center; position: relative; }
+  .flow-box .label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .flow-box .value { font-size: 14px; font-weight: 600; }
+  .flow-arrow { display: flex; align-items: center; font-size: 20px; color: #94a3b8; flex-shrink: 0; }
+
+  /* Axis table */
+  .axis-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .axis-table th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 700; font-size: 12px; color: #475569; border-bottom: 2px solid #e2e8f0; }
+  .axis-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .axis-table tr:last-child td { border-bottom: none; }
+  .score { display: inline-block; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; font-weight: 700; color: #fff; }
+  .s0 { background: #16a34a; }
+  .s1 { background: #f59e0b; }
+  .s2 { background: #dc2626; }
+
+  /* Combo table */
+  .combo { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .combo-item { border-radius: 8px; padding: 12px; text-align: center; }
+  .combo-green { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+  .combo-red { background: #fef2f2; border: 1.5px solid #fecaca; }
+  .combo-amber { background: #fffbeb; border: 1.5px solid #fde68a; }
+  .combo-item .big { font-size: 22px; font-weight: 800; }
+  .combo-item .desc { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+  /* Escalation visual */
+  .escalation { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 14px; background: #faf5ff; border: 1.5px solid #e9d5ff; border-radius: 10px; font-size: 13px; }
+  .escalation .icon { font-size: 22px; flex-shrink: 0; }
+
+  /* Effective health visual */
+  .effective { display: flex; align-items: center; gap: 8px; padding: 14px; background: #f0f9ff; border: 1.5px solid #bae6fd; border-radius: 10px; margin: 12px 0; font-size: 13px; font-weight: 600; }
+
+  /* Weekly/Account */
+  .rollup { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .rollup-card { padding: 14px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; }
+  .rollup-card .title { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .rollup-card .rule { font-size: 13px; }
+
+  .note { font-size: 12px; color: #64748b; margin-top: 12px; padding: 10px 14px; background: #f8fafc; border-left: 3px solid #cbd5e1; border-radius: 4px; }
+  .highlight { background: #fef9c3; padding: 1px 4px; border-radius: 3px; font-weight: 600; }
+  ul { padding-left: 18px; }
+  li { margin-bottom: 4px; font-size: 13px; }
+  .divider { height: 1px; background: #e2e8f0; margin: 16px 0; }
+
+  @media (max-width: 600px) {
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); justify-content: center; }
+    .combo { grid-template-columns: 1fr; }
+    .rollup { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>How DSR Health Status Works</h1>
+<p class="subtitle">A guide for team leads on how the Red / Amber / Green status is calculated</p>
+
+<!-- OVERVIEW -->
+<div class="card">
+  <h2>Overview</h2>
+  <p style="font-size:14px; margin-bottom:12px;">The daily health status is <strong>100% data-driven</strong> from your Jira board. AI writes the report narrative but <strong>cannot change the health color</strong>. A separate manager escalation path exists but can only make things <em>worse</em>, never better.</p>
+  <div class="flow">
+    <div class="flow-box">
+      <div class="label">Jira Data</div>
+      <div class="value">Blocked tickets, Bugs, Sprint progress</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-box">
+      <div class="label">3-Axis Scoring</div>
+      <div class="value">Each axis scores 0, 1, or 2</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-box">
+      <div class="label">Combined Score</div>
+      <div class="value">Sum of all 3 axes</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-box">
+      <div class="label">Final Health</div>
+      <div class="value">
+        <span class="badge badge-green">GREEN</span>
+        <span class="badge badge-amber">AMBER</span>
+        <span class="badge badge-red">RED</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AXIS 1 -->
+<div class="card">
+  <h2><span class="score s0" style="font-size:13px;">1</span> Axis 1: Blocked Tickets</h2>
+  <p style="font-size:13px;">Checks what percentage of your Work-In-Progress tickets have been blocked for <strong>more than 3 days</strong>.</p>
+  <table class="axis-table">
+    <tr><th>Condition</th><th>Score</th><th>Meaning</th></tr>
+    <tr>
+      <td>Long-term blocked % <strong>below</strong> threshold (default 20%)</td>
+      <td><span class="score s0">0</span></td>
+      <td>No blocking concern</td>
+    </tr>
+    <tr>
+      <td>Long-term blocked % <strong>at or above</strong> threshold</td>
+      <td><span class="score s1">1</span></td>
+      <td>Too many tickets stuck</td>
+    </tr>
+  </table>
+  <div class="note">
+    <strong>What counts as WIP:</strong> In Progress, In Review, In QA, Reopened.<br>
+    <strong>Excluded:</strong> UAT, Pending Deployment, Backlog, Done.
+  </div>
+</div>
+
+<!-- AXIS 2 -->
+<div class="card">
+  <h2><span class="score s1" style="font-size:13px;">2</span> Axis 2: Production Bugs</h2>
+  <p style="font-size:13px;">Counts <strong>fresh</strong> production bugs (Bug/Sub-bug with Environment = Production, created within 15 days of sprint start).</p>
+
+  <h3>What is excluded from scoring</h3>
+  <ul>
+    <li><strong>Old/planned bugs</strong> (created &gt;15 days before sprint) &mdash; these are intentional remediation work</li>
+    <li><strong>Re-opened sub-bugs</strong> against active stories &mdash; tracked but not penalized</li>
+  </ul>
+
+  <h3>Scoring Rules</h3>
+  <table class="axis-table">
+    <tr><th>Unaddressed Bugs (TODO / In Progress)</th><th>Score</th></tr>
+    <tr><td>None, or 1 Low-priority only</td><td><span class="score s0">0</span></td></tr>
+    <tr><td>1 bug (Medium or High priority)</td><td><span class="score s1">1</span></td></tr>
+    <tr><td>1 High-priority, or 2+ bugs, or 3+ of any priority</td><td><span class="score s2">2</span></td></tr>
+  </table>
+  <table class="axis-table" style="margin-top:8px;">
+    <tr><th>Addressed Bugs (in QA / Review / UAT)</th><th>Score</th></tr>
+    <tr><td>Any count &mdash; team is already working on them</td><td>Capped at <span class="score s1">1</span></td></tr>
+  </table>
+  <table class="axis-table" style="margin-top:8px;">
+    <tr><th>Spillover Bugs (carried from prior sprint)</th><th>Score</th></tr>
+    <tr><td>Any spillover bugs detected</td><td>Forces at least <span class="score s1">1</span></td></tr>
+  </table>
+  <div class="note">Final bug score = <strong>max</strong>(unaddressed score, addressed score, spillover score)</div>
+</div>
+
+<!-- AXIS 3 -->
+<div class="card">
+  <h2><span class="score s2" style="font-size:13px;">3</span> Axis 3: Sprint Burndown <span class="badge badge-blue" style="font-size:10px;">Scrum Only</span></h2>
+  <p style="font-size:13px;">Compares how far the sprint has elapsed vs. how much work is done. <strong>Skipped for Kanban projects.</strong></p>
+
+  <h3>How "off-track %" is calculated</h3>
+  <p style="font-size:13px; margin-bottom:8px;">
+    <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">offTrackPct = max(0, sprintElapsedPct - completionPct)</code><br>
+    Tickets in QA count as <strong>0.6</strong> toward completion (partial credit for late-stage work).
+  </p>
+
+  <table class="axis-table">
+    <tr><th>Condition</th><th>Score</th><th>Meaning</th></tr>
+    <tr><td>Sprint is less than 20% elapsed</td><td><span class="score s0">0</span></td><td>Too early to judge</td></tr>
+    <tr><td>Off-track % is <strong>below 30%</strong></td><td><span class="score s0">0</span></td><td>On track</td></tr>
+    <tr><td>Off-track % is <strong>30% &ndash; 50%</strong></td><td><span class="score s1">1</span></td><td>At risk</td></tr>
+    <tr><td>Off-track % is <strong>above 50%</strong></td><td><span class="score s2">2</span></td><td>Critical</td></tr>
+  </table>
+</div>
+
+<!-- COMBINED -->
+<div class="card">
+  <h2>Combined Score &rarr; Final Health</h2>
+  <p style="font-size:13px; margin-bottom:8px;">Add up the scores from all 3 axes:</p>
+  <div class="combo">
+    <div class="combo-item combo-green">
+      <div class="big">0</div>
+      <div class="desc"><span class="badge badge-green">GREEN</span><br>All clear</div>
+    </div>
+    <div class="combo-item combo-amber">
+      <div class="big">1</div>
+      <div class="desc"><span class="badge badge-amber">AMBER</span><br>Needs attention</div>
+    </div>
+    <div class="combo-item combo-red">
+      <div class="big">2+</div>
+      <div class="desc"><span class="badge badge-red">RED</span><br>Action required</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:16px;">Examples</h3>
+  <table class="axis-table">
+    <tr><th>Blocked</th><th>Bugs</th><th>Sprint</th><th>Total</th><th>Result</th></tr>
+    <tr><td><span class="score s0">0</span></td><td><span class="score s0">0</span></td><td><span class="score s0">0</span></td><td>0</td><td><span class="badge badge-green">GREEN</span></td></tr>
+    <tr><td><span class="score s1">1</span></td><td><span class="score s0">0</span></td><td><span class="score s0">0</span></td><td>1</td><td><span class="badge badge-amber">AMBER</span></td></tr>
+    <tr><td><span class="score s0">0</span></td><td><span class="score s1">1</span></td><td><span class="score s1">1</span></td><td>2</td><td><span class="badge badge-red">RED</span></td></tr>
+    <tr><td><span class="score s1">1</span></td><td><span class="score s2">2</span></td><td><span class="score s0">0</span></td><td>3</td><td><span class="badge badge-red">RED</span></td></tr>
+  </table>
+</div>
+
+<!-- MANAGER ESCALATION -->
+<div class="card">
+  <h2>Manager Insights Escalation (Optional Layer)</h2>
+  <p style="font-size:13px;">Managers can add written insights about things <strong>not visible in Jira</strong> (customer complaints, team issues, etc.). AI analyzes the text and may suggest escalating the health.</p>
+
+  <div class="escalation">
+    <div class="icon">&#9888;&#65039;</div>
+    <div>
+      <strong>Escalation only</strong> &mdash; insights can move Green &rarr; Amber or Amber &rarr; Red, but can <strong>never</strong> downgrade (make things look better than the data says).
+    </div>
+  </div>
+
+  <h3>What triggers an escalation suggestion</h3>
+  <ul>
+    <li>Customer escalations or complaints</li>
+    <li>Team attrition risk or HR concerns</li>
+    <li>Delivery blockers not captured in Jira</li>
+    <li>Stakeholder dissatisfaction</li>
+  </ul>
+
+  <h3>What the user sees</h3>
+  <div class="effective">
+    <span>Effective Health = </span>
+    <span>max(&nbsp;<span class="badge badge-green">Computed</span>&nbsp;,&nbsp;<span class="badge badge-amber">Insights</span>&nbsp;)</span>
+    <span>&nbsp;=&nbsp;</span>
+    <span class="badge badge-amber">AMBER</span>
+  </div>
+  <p style="font-size:12px; color:#64748b;">The UI shows both signals with a tooltip when escalation is active. If insights are updated and no escalation is needed, the override auto-clears.</p>
+</div>
+
+<!-- WEEKLY / ACCOUNT -->
+<div class="card">
+  <h2>Weekly &amp; Account Roll-Up</h2>
+  <div class="rollup">
+    <div class="rollup-card">
+      <div class="title">Weekly Project Health</div>
+      <div class="rule">
+        <strong>Majority voting</strong> across daily health values:<br>
+        <ul style="margin-top:4px;">
+          <li>&gt;50% of days Red &rarr; <span class="badge badge-red">RED</span></li>
+          <li>Any Red or Amber day &rarr; <span class="badge badge-amber">AMBER</span></li>
+          <li>All days Green &rarr; <span class="badge badge-green">GREEN</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="rollup-card">
+      <div class="title">Account Health</div>
+      <div class="rule">
+        <strong>Threshold-based</strong> across projects:<br>
+        <ul style="margin-top:4px;">
+          <li>Red project % &ge; threshold (default 30%) &rarr; <span class="badge badge-red">RED</span></li>
+          <li>Any Red or Amber project &rarr; <span class="badge badge-amber">AMBER</span></li>
+          <li>All projects Green &rarr; <span class="badge badge-green">GREEN</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KEY POINTS -->
+<div class="card" style="background:#f0fdf4; border: 1.5px solid #bbf7d0;">
+  <h2 style="color:#15803d;">Key Takeaways for Team Leads</h2>
+  <ul>
+    <li><strong>Health is fully data-driven</strong> &mdash; it comes from your Jira board, not AI opinion</li>
+    <li><strong>AI writes the summary text</strong> but the health color is locked by the algorithm</li>
+    <li><strong>Unblock tickets promptly</strong> &mdash; anything blocked &gt;3 days hurts Axis 1</li>
+    <li><strong>Address production bugs fast</strong> &mdash; even moving a bug to QA reduces its score impact</li>
+    <li><strong>Sprint pacing matters</strong> &mdash; if completion falls 30%+ behind elapsed time, it triggers Amber</li>
+    <li><strong>Manager escalation is additive only</strong> &mdash; no one can make a Red look Green</li>
+    <li><strong>Each day stands alone</strong> &mdash; tomorrow's health is recalculated fresh from Jira state</li>
+  </ul>
+</div>
+
+<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:24px;">Lens DSR Health Guide &middot; Last updated April 2026</p>
+
+</div>
+</body>
+</html>

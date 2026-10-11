@@ -1,0 +1,14 @@
+# Per-machine secrets and runtime outputs — never commit these.
+config.json
+outbox.json
+dashboard.html
+.last-run
+schedule.log
+
+# Test scratch. run.sh rebuilds all of this from nothing on every run (it starts
+# with rm -rf on the sandbox), and the artifacts carry local machine detail —
+# home paths, the org name and uuid from captured payloads — that has no business
+# in the repo. The suite's real sources are the .js/.sh files beside this file.
+test/sandbox/
+test/received.json
+test/real-plist.backup
